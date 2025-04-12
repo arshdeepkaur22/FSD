@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   plugins: {
     'postcss-preset-env': { stage: 1 }, // Enables modern CSS features, including nesting
     tailwindcss: {},
