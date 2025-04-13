@@ -15,13 +15,26 @@ const Login = () => {
         email,
         password,
       });
+      
+      // Store token
       localStorage.setItem("token", res.data.token);
+      
+      // Store user data in a structured format
+      const userData = {
+        _id: res.data.userId,
+        role: res.data.role
+        // You can add more fields as needed
+      };
+      
+      // Store user data as a JSON string
+      localStorage.setItem("user", JSON.stringify(userData));
+      
       navigate("/");
     } catch (err) {
       setError("Invalid credentials");
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter flex items-center justify-center">
       {/* Navbar */}

@@ -1,30 +1,78 @@
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
-  title: { 
-    type: String, 
-    required: true 
+  title: {
+    type: String,
+    required: true
   },
-  description: { 
-    type: String, 
-    required: true 
+  description: {
+    type: String,
+    required: true
   },
-  techStack: { 
-    type: String, 
-    required: true 
+  techStack: {
+    type: String,
+    required: true
   },
-  image: { 
-    type: String, 
-    default: "https://via.placeholder.com/350x200" 
+  githubLink: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function(v) {
+        return !v || /^https:\/\/github\.com\/[\w-]+\/[\w.-]+\/?.*$/.test(v);
+      },
+      message: props => `${props.value} is not a valid GitHub repository URL!`
+    }
   },
-  student: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  deployedLink: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function(v) {
+        return !v || /^(http|https):\/\/[^ "]+$/.test(v);
+      },
+      message: props => `${props.value} is not a valid URL!`
+    }
+  },
+  image: {
+    type: String,
+    default: "https://via.placeholder.com/350x200"
+  },
+  student: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
   category: {
-    type: String, 
+    type: String,
     enum: ['Website', 'Game', 'Mobile App', 'AI', 'Other'],
+    required: true
+  },
+  // New SDG fields
+  sdgGoals: {
+    type: [String],
+    enum: [
+      'No Poverty', 
+      'Zero Hunger', 
+      'Good Health and Well-being', 
+      'Quality Education',
+      'Gender Equality', 
+      'Clean Water and Sanitation',
+      'Affordable and Clean Energy',
+      'Decent Work and Economic Growth',
+      'Industry, Innovation, and Infrastructure',
+      'Reduced Inequality',
+      'Sustainable Cities and Communities',
+      'Responsible Consumption and Production',
+      'Climate Action',
+      'Life Below Water',
+      'Life on Land',
+      'Peace, Justice, and Strong Institutions',
+      'Partnerships for the Goals'
+    ],
+    required: true
+  },
+  sdgJustification: {
+    type: String,
     required: true
   },
   likes: {

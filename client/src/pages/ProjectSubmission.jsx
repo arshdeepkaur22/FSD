@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import Header from "../components/Header";
 
 const ProjectSubmission = () => {
   const [formData, setFormData] = useState({
@@ -7,16 +8,51 @@ const ProjectSubmission = () => {
     description: "",
     techStack: "",
     category: "Other",
+    githubLink: "",
+    deployedLink: "",
+    sdgGoals: [],
+    sdgJustification: "",
     image: null,
   });
 
   const categories = ["Website", "Game", "Mobile App", "AI", "Other"];
+  
+  const sdgOptions = [
+    'No Poverty', 
+    'Zero Hunger', 
+    'Good Health and Well-being', 
+    'Quality Education',
+    'Gender Equality', 
+    'Clean Water and Sanitation',
+    'Affordable and Clean Energy',
+    'Decent Work and Economic Growth',
+    'Industry, Innovation, and Infrastructure',
+    'Reduced Inequality',
+    'Sustainable Cities and Communities',
+    'Responsible Consumption and Production',
+    'Climate Action',
+    'Life Below Water',
+    'Life on Land',
+    'Peace, Justice, and Strong Institutions',
+    'Partnerships for the Goals'
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
+    }));
+  };
+
+  const handleSDGChange = (e) => {
+    const value = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setFormData((prevState) => ({
+      ...prevState,
+      sdgGoals: value,
     }));
   };
 
@@ -36,6 +72,18 @@ const ProjectSubmission = () => {
     submissionData.append("description", formData.description);
     submissionData.append("techStack", formData.techStack);
     submissionData.append("category", formData.category);
+    submissionData.append("githubLink", formData.githubLink);
+    submissionData.append("deployedLink", formData.deployedLink);
+    
+// Add student ID from localStorage
+submissionData.append("student", userId);
+
+    // Add SDG goals and justification
+    formData.sdgGoals.forEach(goal => {
+      submissionData.append("sdgGoals", goal);
+    });
+    submissionData.append("sdgJustification", formData.sdgJustification);
+    
     if (formData.image) {
       submissionData.append("image", formData.image);
     }
@@ -59,6 +107,10 @@ const ProjectSubmission = () => {
         description: "",
         techStack: "",
         category: "Other",
+        githubLink: "",
+        deployedLink: "",
+        sdgGoals: [],
+        sdgJustification: "",
         image: null,
       });
 
@@ -73,28 +125,7 @@ const ProjectSubmission = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
       {/* Navbar (same as Home component) */}
-      <nav className="sticky top-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold tracking-tight text-purple-400">
-              Projecthub
-            </div>
-            <div className="flex items-center space-x-6">
-              <nav className="flex space-x-4 text-gray-300 hover:*:text-white">
-                <a href="#" className="hover:text-purple-400 transition">
-                  Your Submissions
-                </a>
-                <a href="#" className="hover:text-purple-400 transition">
-                  Projects
-                </a>
-                <a href="#" className="hover:text-purple-400 transition">
-                  Leaderboard
-                </a>
-              </nav>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header></Header>
 
       {/* Project Submission Form */}
       <div className="max-w-2xl mx-auto px-4 py-12">
@@ -164,6 +195,52 @@ const ProjectSubmission = () => {
               />
             </div>
 
+            {/* GitHub Repository Link */}
+            <div>
+              <label
+                htmlFor="githubLink"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                GitHub Repository Link
+              </label>
+              <input
+                type="url"
+                id="githubLink"
+                name="githubLink"
+                value={formData.githubLink}
+                onChange={handleInputChange}
+                className="w-full bg-[#2C2C2C] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="https://github.com/username/repository"
+                pattern="https://github.com/.*"
+                title="Please enter a valid GitHub repository URL"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Optional: Link to your GitHub repository
+              </p>
+            </div>
+
+            {/* Deployed Project Link */}
+            <div>
+              <label
+                htmlFor="deployedLink"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                Deployed Project Link
+              </label>
+              <input
+                type="url"
+                id="deployedLink"
+                name="deployedLink"
+                value={formData.deployedLink}
+                onChange={handleInputChange}
+                className="w-full bg-[#2C2C2C] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="https://your-deployed-project.com"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Optional: Link to your live/deployed project
+              </p>
+            </div>
+
             {/* Category */}
             <div>
               <label
@@ -186,6 +263,55 @@ const ProjectSubmission = () => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* SDG Goals - New Field */}
+            <div>
+              <label
+                htmlFor="sdgGoals"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                Sustainable Development Goals (SDGs)
+              </label>
+              <select
+                id="sdgGoals"
+                name="sdgGoals"
+                value={formData.sdgGoals}
+                onChange={handleSDGChange}
+                required
+                multiple
+                className="w-full bg-[#2C2C2C] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                size="5"
+              >
+                {sdgOptions.map((goal) => (
+                  <option key={goal} value={goal}>
+                    {goal}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Hold Ctrl (or Cmd) to select multiple goals
+              </p>
+            </div>
+
+            {/* SDG Justification - New Field */}
+            <div>
+              <label
+                htmlFor="sdgJustification"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                SDG Justification
+              </label>
+              <textarea
+                id="sdgJustification"
+                name="sdgJustification"
+                value={formData.sdgJustification}
+                onChange={handleInputChange}
+                required
+                rows={3}
+                className="w-full bg-[#2C2C2C] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="Explain how your project contributes to the selected SDGs"
+              />
             </div>
 
             {/* Project Image */}

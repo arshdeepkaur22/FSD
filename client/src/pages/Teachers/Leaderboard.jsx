@@ -1,369 +1,193 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Trophy, Medal, Users, Search, Star, Filter, ChevronDown, ArrowUpDown } from 'lucide-react';
-
-// Helper function for className conditionals
-const cn = (...classes) => {
-  return classes.filter(Boolean).join(' ');
-};
-
-// Inline Navbar component
-const Navbar = () => {
-  return (
-    <nav className="sticky top-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg rounded-lg border-b-2 border-purple-800 mb-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center py-4">
-          <div className="mb-4 md:mb-0">
-            <h1 className="text-2xl font-bold tracking-tight text-purple-400">ProjectHub</h1>
-          </div>
-          <div className="flex flex-wrap justify-center items-center gap-3">
-            <Link to="/">
-              <button className="bg-purple-800 hover:bg-purple-700 px-4 py-2 rounded transition-colors">
-                Projects
-              </button>
-            </Link>
-            <Link to="/students">
-              <button className="bg-purple-800 hover:bg-purple-700 px-4 py-2 rounded transition-colors">
-                Students
-              </button>
-            </Link>
-            <button className="bg-purple-600 px-4 py-2 rounded transition-colors">
-              Leader Board
-            </button>
-            <div className="bg-purple-700 p-2 rounded-full cursor-pointer hover:bg-purple-600 transition-colors">
-              <Users size={20} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-// Mock data for leaderboard
-const leaderboardData = [
-  {
-    id: 1,
-    teamName: 'Digital Dreamweavers',
-    projectTitle: 'Climate Change Visualization',
-    sdg: 'Climate Action',
-    rating: 4.9,
-    points: 95,
-    teamMembers: ['Alice Johnson', 'Bob Smith', 'Charlie Brown'],
-    projectImage: 'https://via.placeholder.com/150/300a72/ffffff?text=Project',
-  },
-  {
-    id: 2,
-    teamName: 'Code Crafters',
-    projectTitle: 'Clean Water Access Tracker',
-    sdg: 'Clean Water',
-    rating: 4.8,
-    points: 92,
-    teamMembers: ['David Wilson', 'Emma Davis', 'Fred Taylor'],
-    projectImage: 'https://via.placeholder.com/150/5f2993/ffffff?text=Project',
-  },
-  {
-    id: 3,
-    teamName: 'Algo Innovators',
-    projectTitle: 'Renewable Energy Dashboard',
-    sdg: 'Clean Energy',
-    rating: 4.7,
-    points: 89,
-    teamMembers: ['Gina Martin', 'Harry Johnson', 'Irene Smith'],
-    projectImage: 'https://via.placeholder.com/150/8b5cf6/ffffff?text=Project',
-  },
-  {
-    id: 4,
-    teamName: 'Tech Trailblazers',
-    projectTitle: 'Zero Hunger Initiative',
-    sdg: 'Zero Hunger',
-    rating: 4.6,
-    points: 85,
-    teamMembers: ['Jack Robinson', 'Kelly Adams', 'Liam Parker'],
-    projectImage: 'https://via.placeholder.com/150/4c1d95/ffffff?text=Project',
-  },
-  {
-    id: 5,
-    teamName: 'Digital Solutions',
-    projectTitle: 'Education Access Platform',
-    sdg: 'Quality Education',
-    rating: 4.5,
-    points: 82,
-    teamMembers: ['Mike Thompson', 'Nancy Reed', 'Olivia Wilson'],
-    projectImage: 'https://via.placeholder.com/150/7e22ce/ffffff?text=Project',
-  },
-  {
-    id: 6,
-    teamName: 'Python Pioneers',
-    projectTitle: 'Gender Equality Analytics',
-    sdg: 'Gender Equality',
-    rating: 4.3,
-    points: 78,
-    teamMembers: ['Peter Wright', 'Quinn Evans', 'Rachel Lee'],
-    projectImage: 'https://via.placeholder.com/150/6b21a8/ffffff?text=Project',
-  },
-  {
-    id: 7,
-    teamName: 'AI Architects',
-    projectTitle: 'Decent Work Analyzer',
-    sdg: 'Decent Work',
-    rating: 4.2,
-    points: 75,
-    teamMembers: ['Steve Clark', 'Tina Martinez', 'Umar Khan'],
-    projectImage: 'https://via.placeholder.com/150/581c87/ffffff?text=Project',
-  },
-  {
-    id: 8,
-    teamName: 'Web Wizards',
-    projectTitle: 'Industry Innovation Platform',
-    sdg: 'Industry Innovation',
-    rating: 4.1,
-    points: 72,
-    teamMembers: ['Victor Barnes', 'Wendy Moore', 'Xavier Johnson'],
-    projectImage: 'https://via.placeholder.com/150/3b0764/ffffff?text=Project',
-  }
-];
-
-const SDG_OPTIONS = [
-  'No Poverty', 'Zero Hunger', 'Good Health', 
-  'Quality Education', 'Gender Equality', 
-  'Clean Water', 'Clean Energy', 'Decent Work',
-  'Industry Innovation', 'Reduced Inequalities', 
-  'Sustainable Cities', 'Responsible Consumption', 
-  'Climate Action', 'Life Below Water', 
-  'Life on Land', 'Peace and Justice', 
-  'Partnerships'
-];
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Trophy, Heart, Star, ArrowUp, ArrowDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import Header from "../../components/Header";
 
 const Leaderboard = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sdgFilter, setSdgFilter] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'points', direction: 'desc' });
-  const [filteredTeams, setFilteredTeams] = useState(leaderboardData);
+  const [projects, setProjects] = useState([]);
+  const [userData, setUserData] = useState(null);
+  const [sortBy, setSortBy] = useState("likes");
+  const [orderBy, setOrderBy] = useState("desc");
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Apply filters and sorting when relevant states change
   useEffect(() => {
-    let filtered = leaderboardData;
-    
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(team => 
-        team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        team.projectTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        team.teamMembers.some(member => member.toLowerCase().includes(searchTerm.toLowerCase()))
+    // Retrieve user data from localStorage
+    const storedUserData = localStorage.getItem("user");
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData));
+    }
+
+    fetchLeaderboardData();
+  }, [sortBy, orderBy]);
+
+  const fetchLeaderboardData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/api/projects?sortBy=${sortBy}&orderBy=${orderBy}&limit=20`
       );
+      setProjects(res.data.projects);
+    } catch (error) {
+      console.error("Error fetching leaderboard data", error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Apply SDG filter
-    if (sdgFilter) {
-      filtered = filtered.filter(team => team.sdg === sdgFilter);
-    }
-    
-    // Apply sorting
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    
-    setFilteredTeams(filtered);
-  }, [searchTerm, sdgFilter, sortConfig]);
-
-  const requestSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
   };
 
-  const resetFilters = () => {
-    setSearchTerm('');
-    setSdgFilter('');
-    setSortConfig({ key: 'points', direction: 'desc' });
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      // Toggle ordering if clicking the same field
+      setOrderBy(orderBy === "desc" ? "asc" : "desc");
+    } else {
+      // Default to descending order when changing sort field
+      setSortBy(field);
+      setOrderBy("desc");
+    }
   };
 
-  const getLeaderIcon = (index) => {
+  // Helper function to get medal icon for top 3 positions
+  const getMedalIcon = (index) => {
     if (index === 0) return <Trophy size={24} className="text-yellow-400" />;
-    if (index === 1) return <Medal size={24} className="text-gray-400" />;
-    if (index === 2) return <Medal size={24} className="text-amber-700" />;
-    return <span className="text-lg font-bold">{index + 1}</span>;
+    if (index === 1) return <Trophy size={24} className="text-gray-400" />;
+    if (index === 2) return <Trophy size={24} className="text-amber-700" />;
+    return <span className="text-gray-500 text-lg font-bold">{index + 1}</span>;
+  };
+
+  // Sort icon helper
+  const getSortIcon = (field) => {
+    if (sortBy !== field) return null;
+    return orderBy === "desc" ? (
+      <ArrowDown size={16} className="ml-1" />
+    ) : (
+      <ArrowUp size={16} className="ml-1" />
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
       {/* Navbar */}
-      <Navbar />
+      <Header></Header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-purple-300">Project Leaderboard</h1>
-          <Link
-            to="/"
-            className="flex items-center text-purple-400 hover:text-purple-300 transition"
-          >
-            <ArrowLeft className="mr-2" size={20} />
-            <span>Back to Projects</span>
-          </Link>
+      {/* Leaderboard Content */}
+      <div className="max-w-5xl mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-purple-300 mb-4">Project Leaderboard</h1>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Discover the highest ranked and most popular projects on Projecthub. Sort by likes, ratings, or newest additions.
+          </p>
         </div>
 
-        {/* Search and Filter Bar */}
-        <div className="bg-black bg-opacity-60 p-4 rounded-lg mb-6 border border-purple-800">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search teams or projects..." 
-                className="w-full bg-gray-900 border border-purple-900 rounded-md py-2 pl-10 pr-4 text-white"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <select 
-                className="bg-gray-900 border border-purple-900 rounded-md py-2 px-4 text-white"
-                value={sdgFilter}
-                onChange={(e) => setSdgFilter(e.target.value)}
-              >
-                <option value="">All SDGs</option>
-                {SDG_OPTIONS.map(sdg => (
-                  <option key={sdg} value={sdg}>{sdg}</option>
-                ))}
-              </select>
-              <button 
-                onClick={resetFilters}
-                className="bg-purple-900 hover:bg-purple-800 rounded-md p-2"
-                title="Reset filters"
-              >
-                <ArrowUpDown size={20} />
-              </button>
-            </div>
+        {/* Sorting Options */}
+        <div className="bg-[#1E1E1E] rounded-xl p-6 mb-8 shadow-lg">
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button
+              onClick={() => handleSort("likes")}
+              className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                sortBy === "likes" ? "bg-purple-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+              }`}
+            >
+              <Heart size={16} className="mr-2" />
+              Most Liked
+              {getSortIcon("likes")}
+            </button>
+            <button
+              onClick={() => handleSort("averageRating")}
+              className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                sortBy === "averageRating" ? "bg-purple-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+              }`}
+            >
+              <Star size={16} className="mr-2" />
+              Top Rated
+              {getSortIcon("averageRating")}
+            </button>
+            <button
+              onClick={() => handleSort("createdAt")}
+              className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                sortBy === "createdAt" ? "bg-purple-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+              }`}
+            >
+              Newest
+              {getSortIcon("createdAt")}
+            </button>
           </div>
         </div>
 
-        {/* Leaderboard Table */}
-        <div className="bg-black bg-opacity-60 rounded-lg border border-purple-800 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-purple-900">
-                <tr>
-                  <th className="px-4 py-3 text-left">#</th>
-                  <th className="px-4 py-3 text-left">Team</th>
-                  <th className="px-4 py-3 text-left">Project</th>
-                  <th className="px-4 py-3 text-left">SDG</th>
-                  <th className="px-4 py-3 text-center cursor-pointer" onClick={() => requestSort('rating')}>
-                    <div className="flex items-center justify-center">
-                      Rating
-                      <ChevronDown 
-                        size={16} 
-                        className={cn(
-                          "ml-1 transition-transform", 
-                          sortConfig.key === 'rating' && sortConfig.direction === 'asc' && "transform rotate-180"
-                        )}
-                      />
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {projects.map((project, index) => (
+              <Link
+                to={`/project/${project._id}`}
+                key={project._id}
+                className="block bg-[#1E1E1E] rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:shadow-purple-900/30 hover:translate-x-1"
+              >
+                <div className="flex flex-col md:flex-row">
+                  {/* Rank and Image */}
+                  <div className="relative md:w-1/4">
+                    <img
+                      src={`http://localhost:5000${project.image}`}
+                      alt="Project"
+                      className="w-full h-36 md:h-full object-cover"
+                    />
+                    <div className="absolute top-0 left-0 bg-black/70 p-2 flex items-center justify-center">
+                      {getMedalIcon(index)}
                     </div>
-                  </th>
-                  <th className="px-4 py-3 text-center cursor-pointer" onClick={() => requestSort('points')}>
-                    <div className="flex items-center justify-center">
-                      Points
-                      <ChevronDown 
-                        size={16} 
-                        className={cn(
-                          "ml-1 transition-transform", 
-                          sortConfig.key === 'points' && sortConfig.direction === 'asc' && "transform rotate-180"
-                        )}
-                      />
+                    <div className="absolute top-3 right-3 bg-black/50 px-3 py-1 rounded-full text-xs">
+                      {project.category}
                     </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTeams.map((team, index) => (
-                  <tr 
-                    key={team.id} 
-                    className={cn(
-                      "border-b border-purple-900/30 hover:bg-purple-900/20 transition-colors",
-                      index < 3 && "bg-purple-900/10"
-                    )}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-900/30">
-                        {getLeaderIcon(index)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full overflow-hidden mr-3 bg-purple-800">
-                          <img 
-                            src={team.projectImage} 
-                            alt={team.teamName}
-                            className="w-full h-full object-cover"
+                  </div>
+
+                  {/* Project Details */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-purple-300">
+                        {project.title}
+                      </h2>
+                      <p className="text-gray-400 text-sm mt-2">
+                        {project.description}
+                      </p>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center space-x-6">
+                        <div className="flex items-center">
+                          <Heart
+                            size={18}
+                            className={project.likedByUser ? "text-red-500" : "text-gray-400"}
                           />
+                          <span className="ml-2 text-gray-300">{project.likes || 0}</span>
                         </div>
-                        <div>
-                          <div className="font-medium">{team.teamName}</div>
-                          <div className="text-sm text-gray-400">{team.teamMembers.join(', ')}</div>
+                        <div className="flex items-center">
+                          <Star
+                            size={18}
+                            className="text-yellow-400"
+                          />
+                          <span className="ml-2 text-gray-300">
+                            {project.averageRating?.toFixed(1) || "N/A"}
+                          </span>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 font-medium">{team.projectTitle}</td>
-                    <td className="px-4 py-3">
-                      <span className="bg-purple-800 text-xs px-2 py-1 rounded">
-                        {team.sdg}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center">
-                        <span>{team.rating}</span>
-                        <Star size={16} className="text-yellow-400 ml-1" />
+                      <div className="text-xs text-gray-500">
+                        By {project.student?.username || "Anonymous"}
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="font-bold text-lg text-purple-300">{team.points}</div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredTeams.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                      No teams match your search criteria
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-        </div>
+        )}
 
-        {/* Legend */}
-        <div className="mt-6 bg-black bg-opacity-60 p-4 rounded-lg border border-purple-800">
-          <h3 className="text-lg font-semibold mb-3 text-purple-300">Scoring System</h3>
-          <ul className="text-sm text-gray-300 space-y-2">
-            <li className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-              <span>Projects are scored based on ratings, feedback from faculty, and SDG alignment</span>
-            </li>
-            <li className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-              <span>Ratings contribute 60% of the total score</span>
-            </li>
-            <li className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-              <span>Additional points are awarded for innovation and technical implementation</span>
-            </li>
-            <li className="flex items-center">
-              <div className="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
-              <span>Rankings are updated weekly</span>
-            </li>
-          </ul>
-        </div>
+        {projects.length === 0 && !isLoading && (
+          <div className="text-center py-12 text-gray-400">
+            <p>No projects found. Be the first to submit a project!</p>
+          </div>
+        )}
       </div>
     </div>
   );

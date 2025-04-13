@@ -1,12 +1,13 @@
+// routes/collabRoutes.js
 const express = require("express");
 const Collaboration = require("../models/Collaboration");
-const authMiddleware = require("../middleware/authMiddleware");
 const User = require("../models/User");
+const axios = require("axios");
 
 const router = express.Router();
 
 // Create a collaboration request
-router.post("/create", authMiddleware, async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const {
       title,
@@ -14,18 +15,42 @@ router.post("/create", authMiddleware, async (req, res) => {
       description,
       requiredSkills,
       positionsAvailable,
-      deadline
+      deadline,
+      githubRepository,
+      offersMentorship,
+      sdgGoals,
+      sdgJustification,
+      createdBy
     } = req.body;
+
+    // Validate GitHub repository if provided
+    if (githubRepository) {
+      try {
+        // Simple validation to check if repo exists
+        const githubUrl = new URL(githubRepository);
+        if (!githubUrl.hostname.includes('github.com')) {
+          return res.status(400).json({ error: "Invalid GitHub repository URL" });
+        }
+      } catch (err) {
+        return res.status(400).json({ error: "Invalid GitHub repository URL" });
+      }
+    }
 
     // Create the collaboration request
     const collaboration = new Collaboration({
       title,
       projectDescription,
       description,
-      requiredSkills: requiredSkills.split(',').map(skill => skill.trim()),
+      requiredSkills: Array.isArray(requiredSkills) 
+        ? requiredSkills 
+        : (requiredSkills ? requiredSkills.split(',').map(skill => skill.trim()) : []),
       positionsAvailable: parseInt(positionsAvailable, 10),
-      createdBy: req.user.id,
+      createdBy,
       deadline: deadline ? new Date(deadline) : null,
+      githubRepository,
+      offersMentorship: offersMentorship === 'true' || offersMentorship === true,
+      sdgGoals: sdgGoals || [],
+      sdgJustification,
       status: "Open"
     });
 
@@ -45,8 +70,10 @@ router.post("/create", authMiddleware, async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      status = "Open", // Default to Open, but allow filtering by status
+      status,
       skill,
+      sdg,
+      offersMentorship,
       page = 1,
       limit = 10
     } = req.query;
@@ -61,6 +88,16 @@ router.get("/", async (req, res) => {
     // Filter by skill if provided
     if (skill) {
       query.requiredSkills = { $in: [skill] };
+    }
+
+    // Filter by SDG if provided
+    if (sdg) {
+      query.sdgGoals = { $in: [sdg] };
+    }
+
+    // Filter by mentorship availability
+    if (offersMentorship) {
+      query.offersMentorship = offersMentorship === 'true';
     }
 
     const options = {
@@ -90,6 +127,14 @@ router.get("/:id", async (req, res) => {
     const collaboration = await Collaboration.findById(req.params.id)
       .populate("createdBy", "username email")
       .populate("applicants.user", "username email");
+    
+    // Only populate mentorshipRequests if they exist in the schema
+    if (collaboration && collaboration.mentorshipRequests && collaboration.mentorshipRequests.length > 0) {
+      await Collaboration.populate(collaboration, {
+        path: "mentorshipRequests.user",
+        select: "username email"
+      });
+    }
 
     if (!collaboration) {
       return res.status(404).json({ message: "Collaboration request not found" });
@@ -102,10 +147,10 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Apply to a collaboration request (any user can apply)
-router.post("/:id/apply", authMiddleware, async (req, res) => {
+// Apply to a collaboration request
+router.post("/:id/apply", async (req, res) => {
   try {
-    const { skills, message } = req.body;
+    const { skills, message, githubProfile, userId } = req.body;
     const collaboration = await Collaboration.findById(req.params.id);
 
     if (!collaboration) {
@@ -116,33 +161,17 @@ router.post("/:id/apply", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "This collaboration request is no longer open" });
     }
 
-    // Check if the user has already applied
-    const alreadyApplied = collaboration.applicants.some(
-      applicant => applicant.user.toString() === req.user.id
-    );
-
-    if (alreadyApplied) {
-      return res.status(400).json({ message: "You have already applied to this collaboration" });
-    }
-
     // Add the application
     collaboration.applicants.push({
-      user: req.user.id,
-      skills: skills.split(',').map(skill => skill.trim()),
+      user: userId || "6428a1b23bc9b2f4c9c62a8f", // Use provided ID or default
+      skills: typeof skills === 'string' ? skills.split(',').map(skill => skill.trim()) : skills,
       message,
+      githubProfile,
       status: "Pending",
       appliedAt: new Date()
     });
 
     await collaboration.save();
-
-    // Notify the creator about the new application (implementation placeholder)
-    try {
-      const creator = await User.findById(collaboration.createdBy);
-      console.log(`New application notification would be sent to ${creator.email}`);
-    } catch (err) {
-      console.error("Error sending notification:", err);
-    }
 
     res.status(200).json({
       message: "Application submitted successfully",
@@ -154,100 +183,35 @@ router.post("/:id/apply", authMiddleware, async (req, res) => {
   }
 });
 
-// Update application status (accept/reject)
-router.put("/:id/applications/:applicationId", authMiddleware, async (req, res) => {
+// Get my created collaborations
+router.get("/my/created", async (req, res) => {
   try {
-    const { status } = req.body;
-    const collaboration = await Collaboration.findById(req.params.id);
-
-    if (!collaboration) {
-      return res.status(404).json({ message: "Collaboration request not found" });
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
     }
+    
+    const creatorId = userId;
 
-    // Check if the user is the creator of the collaboration request
-    if (collaboration.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({ message: "You don't have permission to update applications" });
-    }
-
-    // Find the application
-    const application = collaboration.applicants.id(req.params.applicationId);
-
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-
-    // Update the application status
-    application.status = status;
-
-    // If accepting and all positions are filled, update collaboration status
-    if (status === "Accepted") {
-      const acceptedApplicants = collaboration.applicants.filter(app => app.status === "Accepted");
-      
-      if (acceptedApplicants.length >= collaboration.positionsAvailable) {
-        collaboration.status = "Filled";
-      }
-
-      // Notify the applicant about acceptance
-      try {
-        const applicant = await User.findById(application.user);
-        console.log(`Acceptance notification would be sent to ${applicant.email}`);
-      } catch (err) {
-        console.error("Error sending notification:", err);
-      }
-    } else if (status === "Rejected") {
-      // Notify the applicant about rejection
-      try {
-        const applicant = await User.findById(application.user);
-        console.log(`Rejection notification would be sent to ${applicant.email}`);
-      } catch (err) {
-        console.error("Error sending notification:", err);
-      }
-    }
-
-    await collaboration.save();
-
-    res.json({
-      message: `Application ${status.toLowerCase()} successfully`,
-      application
-    });
-  } catch (error) {
-    console.error("Error updating application:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Close a collaboration request
-router.put("/:id/close", authMiddleware, async (req, res) => {
-  try {
-    const collaboration = await Collaboration.findById(req.params.id);
-
-    if (!collaboration) {
-      return res.status(404).json({ message: "Collaboration request not found" });
-    }
-
-    if (collaboration.createdBy.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Only the creator can close this collaboration request" });
-    }
-
-    collaboration.status = "Closed";
-    await collaboration.save();
-
-    res.json({
-      message: "Collaboration request closed successfully",
-      collaboration
-    });
-  } catch (error) {
-    console.error("Error closing collaboration:", error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get my created collaborations (with applicants)
-router.get("/my/created", authMiddleware, async (req, res) => {
-  try {
-    const collaborations = await Collaboration.find({ createdBy: req.user.id })
+    // Find collaborations without populating mentorshipRequests first
+    const collaborations = await Collaboration.find({ createdBy: creatorId })
       .sort({ createdAt: -1 })
       .populate("applicants.user", "username email");
+    
+    // Only populate mentorshipRequests if needed and they exist in the documents
+    for (let collab of collaborations) {
+      if (collab.mentorshipRequests && collab.mentorshipRequests.length > 0) {
+        try {
+          await Collaboration.populate(collab, {
+            path: "mentorshipRequests.user",
+            select: "username email"
+          });
+        } catch (populateError) {
+          console.warn("Couldn't populate mentorshipRequests:", populateError.message);
+        }
+      }
+    }
 
     res.json({ collaborations });
   } catch (error) {
@@ -257,18 +221,27 @@ router.get("/my/created", authMiddleware, async (req, res) => {
 });
 
 // Get my applications
-router.get("/my/applications", authMiddleware, async (req, res) => {
+router.get("/my/applications", async (req, res) => {
   try {
-    const collaborations = await Collaboration.find({
-      "applicants.user": req.user.id
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+    
+    const applicantId = userId;
+
+    // Get collaborations where I applied
+    const appliedCollaborations = await Collaboration.find({
+      "applicants.user": applicantId
     })
       .sort({ createdAt: -1 })
       .populate("createdBy", "username email");
 
-    // Format the response to include application status
-    const applications = collaborations.map(collab => {
+    // Format the applications response
+    const applications = appliedCollaborations.map(collab => {
       const myApplication = collab.applicants.find(
-        app => app.user.toString() === req.user.id
+        app => app.user.toString() === applicantId
       );
       
       return {
@@ -278,20 +251,155 @@ router.get("/my/applications", authMiddleware, async (req, res) => {
           projectDescription: collab.projectDescription,
           createdBy: collab.createdBy,
           status: collab.status,
-          createdAt: collab.createdAt
+          createdAt: collab.createdAt,
+          githubRepository: collab.githubRepository
         },
         application: {
           status: myApplication.status,
           appliedAt: myApplication.appliedAt,
           skills: myApplication.skills,
-          message: myApplication.message
+          message: myApplication.message,
+          githubProfile: myApplication.githubProfile
         }
       };
     });
 
-    res.json({ applications });
+    // Get mentorship requests
+    // Since we're having schema issues, let's check if we can access them
+    let mentorshipRequests = [];
+    try {
+      const mentorshipCollaborations = await Collaboration.find({
+        "mentorshipRequests.user": applicantId
+      })
+        .sort({ createdAt: -1 })
+        .populate("createdBy", "username email");
+      
+      mentorshipRequests = mentorshipCollaborations.map(collab => {
+        const myRequest = collab.mentorshipRequests.find(
+          req => req.user.toString() === applicantId
+        );
+        
+        return {
+          collaboration: {
+            _id: collab._id,
+            title: collab.title,
+            projectDescription: collab.projectDescription,
+            createdBy: collab.createdBy,
+            status: collab.status,
+            createdAt: collab.createdAt
+          },
+          request: myRequest
+        };
+      });
+    } catch (mentorshipError) {
+      console.warn("Error fetching mentorship requests:", mentorshipError);
+      // Continue without mentorship requests
+    }
+
+    res.json({ 
+      applications,
+      mentorshipRequests
+    });
   } catch (error) {
     console.error("Error fetching applications:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Close collaboration
+router.put("/:id/close", async (req, res) => {
+  try {
+    const collaboration = await Collaboration.findById(req.params.id);
+    
+    if (!collaboration) {
+      return res.status(404).json({ message: "Collaboration request not found" });
+    }
+    
+    collaboration.status = "Closed";
+    await collaboration.save();
+    
+    res.json({ message: "Collaboration request closed successfully" });
+  } catch (error) {
+    console.error("Error closing collaboration:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+router.post("/:id/mentorship", async (req, res) => {
+  try {
+    const { topic, description, preferredTimeSlots, userId } = req.body;
+    const collaboration = await Collaboration.findById(req.params.id);
+
+    if (!collaboration) {
+      return res.status(404).json({ message: "Collaboration request not found" });
+    }
+
+    if (!collaboration.offersMentorship) {
+      return res.status(400).json({ message: "This collaboration does not offer mentorship" });
+    }
+
+    // Initialize mentorshipRequests array if it doesn't exist
+    if (!collaboration.mentorshipRequests) {
+      collaboration.mentorshipRequests = [];
+    }
+
+    // Add the mentorship request
+    collaboration.mentorshipRequests.push({
+      user: userId,
+      topic,
+      description,
+      preferredTimeSlots,
+      status: "Pending",
+      createdAt: new Date()
+    });
+
+    await collaboration.save();
+
+    res.status(200).json({
+      message: "Mentorship request submitted successfully",
+      request: collaboration.mentorshipRequests[collaboration.mentorshipRequests.length - 1]
+    });
+  } catch (error) {
+    console.error("Error requesting mentorship:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Respond to mentorship request
+router.put("/:id/mentorship/:requestId", async (req, res) => {
+  try {
+    const { status, mentorMessage } = req.body;
+    const collaboration = await Collaboration.findById(req.params.id);
+
+    if (!collaboration) {
+      return res.status(404).json({ message: "Collaboration request not found" });
+    }
+
+    // Find the mentorship request
+    const mentorshipRequestIndex = collaboration.mentorshipRequests.findIndex(
+      (request) => request._id.toString() === req.params.requestId
+    );
+
+    if (mentorshipRequestIndex === -1) {
+      return res.status(404).json({ message: "Mentorship request not found" });
+    }
+
+    // Update the mentorship request
+    collaboration.mentorshipRequests[mentorshipRequestIndex].status = status;
+    if (mentorMessage) {
+      collaboration.mentorshipRequests[mentorshipRequestIndex].mentorMessage = mentorMessage;
+    }
+
+    await collaboration.save();
+
+    res.json({
+      message: `Mentorship request ${status.toLowerCase()} successfully`,
+      request: collaboration.mentorshipRequests[mentorshipRequestIndex]
+    });
+  } catch (error) {
+    console.error("Error responding to mentorship request:", error);
     res.status(500).json({ error: error.message });
   }
 });

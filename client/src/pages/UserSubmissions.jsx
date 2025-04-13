@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Heart, Star, MessageCircle, Eye, Calendar, Code, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
+import Header from "../components/Header";
 
 const UserSubmissions = () => {
   const [projects, setProjects] = useState([]);
@@ -104,38 +105,7 @@ const UserSubmissions = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
       {/* Navbar - Same as Home component */}
-      <nav className="sticky top-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold tracking-tight text-purple-400">
-              Projecthub
-            </div>
-            <div className="flex items-center space-x-6">
-              <nav className="flex space-x-4 text-gray-300 hover:*:text-white">
-                <Link to="/submissions" className="text-purple-400 transition">
-                  Your Submissions
-                </Link>
-                <Link to="/" className="hover:text-purple-400 transition">
-                  Projects
-                </Link>
-                <Link to="/leaderboard" className="hover:text-purple-400 transition">
-                  Leaderboard
-                </Link>
-              </nav>
-
-              {userData && (
-                <span className="text-gray-300">Hi, {userData.username}</span>
-              )}
-
-              <Link to="/submit">
-                <button className="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-full font-semibold transition transform active:scale-95">
-                  Submit Project
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <Header></Header>
 
       {/* Page Header */}
       <div className="max-w-6xl mx-auto px-4 py-8">
