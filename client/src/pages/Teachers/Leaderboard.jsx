@@ -14,7 +14,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center py-4">
           <div className="mb-4 md:mb-0">
-            <h1 className="text-2xl font-bold tracking-tight text-purple-400">Creative Coding Showcase Platform</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-purple-400">ProjectHub</h1>
           </div>
           <div className="flex flex-wrap justify-center items-center gap-3">
             <Link to="/">

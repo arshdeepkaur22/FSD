@@ -4,9 +4,10 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import ProjectSubmission from "./pages/ProjectSubmission";
-import Dashboard from "./pages/Dashboard";
-import Leaderboard from "./pages/Leaderboard";
-import Students from "./pages/students";
+import Dashboard from "./pages/Teachers/Dashboard";
+import Leaderboard from "./pages/Teachers/Leaderboard";
+import Students from "./pages/Teachers/Students";
+import FeedbackModal from "./pages/Teachers/FeedbackModal";
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         ></Route>
         <Route path="/leaderboard" element={<Leaderboard />}></Route>
         <Route path="/students" element={<Students />}></Route>
+        <Route path="/feedback" element={<FeedbackModal />}></Route>
       </Routes>
     </Router>
   );
