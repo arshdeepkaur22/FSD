@@ -68,8 +68,59 @@ const Home = () => {
     }
   };
 
+
+  // Function to render SDG goals badges
+  const renderSdgBadges = (sdgGoals) => {
+    if (!sdgGoals || sdgGoals.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {sdgGoals.slice(0, 2).map((goal, index) => (
+          <span
+            key={index}
+            className="text-xs bg-green-800/60 text-green-200 px-2 py-1 rounded-full"
+          >
+            {goal}
+          </span>
+        ))}
+        {sdgGoals.length > 2 && (
+          <span className="text-xs bg-green-800/60 text-green-200 px-2 py-1 rounded-full">
+            +{sdgGoals.length - 2} more
+          </span>
+        )}
+      </div>
+    );
+  };
+  // Add this to your Home component, near the top with your other state variables:
+
+  // Check if user is a teacher
+  const getUserRole = () => {
+    const userRole = localStorage.getItem("userRole");
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        return parsed.role || userRole;
+      } catch (e) {
+        return userRole;
+      }
+    }
+    return userRole;
+  };
+
+  const userRole = getUserRole();
+  const isTeacher = userRole === "teacher";
+
+  // Then update your handleRate function to check if user is a teacher:
+
   const handleRate = async (projectId, rating) => {
     try {
+      // Check if user is a teacher
+      if (!isTeacher) {
+        alert("Only teachers can rate projects");
+        return;
+      }
+
       // Get token from localStorage
       const token = localStorage.getItem("token");
 
@@ -100,29 +151,6 @@ const Home = () => {
       console.error("Error rating project", error);
       alert("Failed to rate project");
     }
-  };
-
-  // Function to render SDG goals badges
-  const renderSdgBadges = (sdgGoals) => {
-    if (!sdgGoals || sdgGoals.length === 0) return null;
-
-    return (
-      <div className="flex flex-wrap gap-1 mt-2">
-        {sdgGoals.slice(0, 2).map((goal, index) => (
-          <span
-            key={index}
-            className="text-xs bg-green-800/60 text-green-200 px-2 py-1 rounded-full"
-          >
-            {goal}
-          </span>
-        ))}
-        {sdgGoals.length > 2 && (
-          <span className="text-xs bg-green-800/60 text-green-200 px-2 py-1 rounded-full">
-            +{sdgGoals.length - 2} more
-          </span>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -199,9 +227,9 @@ const Home = () => {
                     <div className="relative">
                       <img
                         src={
-                          project.image ? 
-                          `http://localhost:5000${project.image}` : 
-                          "https://via.placeholder.com/800x400?text=No+Image"
+                          project.image
+                            ? `http://localhost:5000${project.image}`
+                            : "https://via.placeholder.com/800x400?text=No+Image"
                         }
                         alt={project.title}
                         className="w-full h-56 object-cover transition-transform duration-300"
@@ -225,9 +253,22 @@ const Home = () => {
                       </div>
 
                       {/* Student Info */}
+                      {/* Student Info */}
                       <div className="flex items-center text-gray-500 text-sm mb-4">
                         <span className="mr-2">👤</span>
-                        <span>By: {project.student?.name || "Anonymous"}</span>
+                        <span>
+                          By:{" "}
+                          {project.student
+                            ? typeof project.student === "object"
+                              ? // Try various common name fields
+                                project.student.username ||
+                                project.student.name ||
+                                project.student.fullName ||
+                                "Anonymous"
+                              : // If student is just an ID
+                                "Anonymous"
+                            : "Anonymous"}
+                        </span>
                       </div>
 
                       {/* GitHub & Deployed Links */}
@@ -301,9 +342,17 @@ const Home = () => {
                               <button
                                 key={star}
                                 onClick={() => handleRate(project._id, star)}
+                                disabled={!isTeacher}
+                                title={
+                                  isTeacher
+                                    ? "Click to rate"
+                                    : "Only teachers can rate projects"
+                                }
                                 className={`text-xl transition-colors duration-200 ${
                                   star <= (project.averageRating || 0)
                                     ? "text-yellow-500"
+                                    : isTeacher
+                                    ? "text-gray-400 hover:text-yellow-400"
                                     : "text-gray-400"
                                 }`}
                               >
