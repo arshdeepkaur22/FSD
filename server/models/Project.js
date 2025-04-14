@@ -1,5 +1,42 @@
 const mongoose = require("mongoose");
 
+// Team member schema (subdocument)
+const teamMemberSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    required: true
+  },
+  grade: {
+    type: String,
+    enum: ["", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"],
+    default: ""
+  }
+});
+
+// Feedback schema (subdocument)
+const feedbackSchema = new mongoose.Schema({
+  teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  text: {
+    type: String,
+    required: true
+  },
+  suggestedSdg: {
+    type: String
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const projectSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -47,7 +84,23 @@ const projectSchema = new mongoose.Schema({
     enum: ['Website', 'Game', 'Mobile App', 'AI', 'Other'],
     required: true
   },
-  // New SDG fields
+  // Project status
+  status: {
+    type: String,
+    enum: ['Pending', 'In Review', 'Approved', 'Rejected'],
+    default: 'Pending'
+  },
+  // Overall project grade (letter grade)
+  grade: {
+    type: String,
+    enum: ["", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"],
+    default: ""
+  },
+  // Team members
+  teamMembers: [teamMemberSchema],
+  // Teacher feedback
+  feedback: [feedbackSchema],
+  // SDG fields
   sdgGoals: {
     type: [String],
     enum: [

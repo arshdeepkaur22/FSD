@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const Project = require("../models/Project");
+const User = require("../models/User"); 
 const authMiddleware = require("../middleware/authMiddleware");
 const axios = require("axios");
 const path = require("path");
@@ -41,8 +42,9 @@ router.post("/upload", authMiddleware, upload.single("image"), async (req, res) 
       githubLink, 
       deployedLink,
       sdgGoals,
-      sdgJustification
-     } = req.body;
+      sdgJustification,
+      teamMembers // New field for team members
+    } = req.body;
     
     const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
 
@@ -83,6 +85,20 @@ router.post("/upload", authMiddleware, upload.single("image"), async (req, res) 
       return res.status(400).json({ error: "SDG justification is required when SDG goals are selected" });
     }
 
+    // Parse team members if provided
+    let teamMembersArray = [];
+    if (teamMembers) {
+      try {
+        if (typeof teamMembers === 'string') {
+          teamMembersArray = JSON.parse(teamMembers);
+        } else if (Array.isArray(teamMembers)) {
+          teamMembersArray = teamMembers;
+        }
+      } catch (err) {
+        console.error("Error parsing team members:", err);
+      }
+    }
+
     const project = new Project({ 
       title, 
       description, 
@@ -93,62 +109,357 @@ router.post("/upload", authMiddleware, upload.single("image"), async (req, res) 
       githubLink,
       deployedLink,
       sdgGoals: sdgGoalsArray,
-      sdgJustification
+      sdgJustification,
+      teamMembers: teamMembersArray, // Add team members to the project
+      status: "In Review", // Default status for new projects
+      feedback: [], // Initialize empty feedback array
+      grade: "", // Initialize empty grade
     });
     
     await project.save();
 
     res.status(201).json({ message: "Project uploaded successfully!", project });
   } catch (error) {
+    console.error("Error submitting project:", error);
     res.status(400).json({ error: error.message });
   }
 });
 
+router.post("/:id/grade", authMiddleware, async (req, res) => {
+  // Debug log
+  console.log("Grade request received from user:", req.user);
+  console.log("Project ID:", req.params.id);
+  console.log("Grade data:", req.body);
+  
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Only teachers can grade projects" });
+  }
+  
+  try {
+    const { grade } = req.body;
+    
+    // Check if grade was provided
+    if (grade === undefined || grade === null) {
+      return res.status(400).json({ message: "Grade must be provided" });
+    }
+    
+    // Validate grade format (empty string is allowed for clearing grade)
+    const validGrades = ["", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"];
+    if (!validGrades.includes(grade)) {
+      return res.status(400).json({ message: `Invalid grade value: '${grade}'. Must be one of: ${validGrades.join(", ")}` });
+    }
+    
+    // Use findByIdAndUpdate to avoid validation issues
+    // Also update the status to "Approved" if a grade is provided, or leave as is if grade is empty
+    const newStatus = grade ? "Approved" : undefined;
+    
+    const updateFields = { grade };
+    if (newStatus) {
+      updateFields.status = newStatus;
+    }
+    
+    const updatedProject = await Project.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      { new: true, runValidators: false }
+    );
+    
+    if (!updatedProject) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+
+    console.log("Project graded successfully:", { 
+      id: updatedProject._id, 
+      grade: updatedProject.grade,
+      status: updatedProject.status
+    });
+
+    res.json({ 
+      message: "Project grade updated successfully",
+      grade: updatedProject.grade,
+      status: updatedProject.status
+    });
+  } catch (error) {
+    console.error("Error in grade handler:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+
+// Like a Project
 // Like a Project
 router.post("/:id/like", authMiddleware, async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: "Project not found" });
+    console.log("Like request received from user:", req.user);
+    console.log("Project ID:", req.params.id);
+    
+    // Use findByIdAndUpdate to avoid validation issues
+    const updatedProject = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } }, // Increment likes by 1
+      { new: true, runValidators: false }
+    );
+    
+    if (!updatedProject) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    console.log("Project liked successfully:", {
+      projectId: updatedProject._id,
+      likes: updatedProject.likes
+    });
 
-    // Prevent multiple likes from same user (optional - can be implemented with more complex logic)
-    project.likes += 1;
+    res.json({ 
+      message: "Project liked successfully",
+      likes: updatedProject.likes 
+    });
+  } catch (error) {
+    console.error("Error in like handler:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+// Rate a Project (Teacher Only)
+// Rate a Project (Teacher Only)
+router.post("/:id/rate", authMiddleware, async (req, res) => {
+  // Add debug logging
+  console.log("Rate request received from user:", req.user);
+  console.log("Project ID:", req.params.id);
+  console.log("Rating data:", req.body);
+  
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Only teachers can rate projects" });
+  }
+  
+  try {
+    const { rating } = req.body;
+    
+    // Parse rating as a number
+    const numericRating = parseInt(rating, 10);
+    
+    console.log("Parsed rating:", numericRating);
+    
+    // Validate rating
+    if (isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ 
+        message: `Invalid rating value: ${rating}. Must be a number between 1 and 5.`
+      });
+    }
+    
+    // Get user ID
+    const userId = req.user.id;
+    
+    // Find if user has already rated this project
+    const existingRating = await Project.findOne({
+      _id: req.params.id,
+      "ratings.user": userId
+    });
+    
+    let updatedProject;
+    
+    if (existingRating) {
+      // User has already rated, update their rating
+      updatedProject = await Project.findOneAndUpdate(
+        { _id: req.params.id, "ratings.user": userId },
+        { $set: { "ratings.$.rating": numericRating } },
+        { new: true }
+      );
+    } else {
+      // User hasn't rated yet, add new rating
+      updatedProject = await Project.findByIdAndUpdate(
+        req.params.id,
+        { 
+          $push: { 
+            ratings: { user: userId, rating: numericRating } 
+          }
+        },
+        { new: true }
+      );
+    }
+    
+    if (!updatedProject) {
+      return res.status(404).json({ message: "Project not found" });
+    }
+    
+    // Calculate average rating manually
+    let sumRatings = 0;
+    updatedProject.ratings.forEach(r => {
+      sumRatings += r.rating;
+    });
+    
+    const avgRating = updatedProject.ratings.length > 0 ? 
+      sumRatings / updatedProject.ratings.length : 0;
+    
+    // Update the average rating field
+    updatedProject = await Project.findByIdAndUpdate(
+      req.params.id,
+      { averageRating: avgRating },
+      { new: true }
+    );
+    
+    // Also update the project status if it's "Pending"
+    if (updatedProject.status === "Pending") {
+      updatedProject = await Project.findByIdAndUpdate(
+        req.params.id,
+        { status: "In Review" },
+        { new: true }
+      );
+    }
+    
+    console.log("Project rated successfully:", {
+      projectId: updatedProject._id,
+      averageRating: avgRating,
+      ratingsCount: updatedProject.ratings.length,
+      status: updatedProject.status
+    });
+
+    res.json({ 
+      message: "Rating submitted successfully",
+      averageRating: avgRating,
+      ratings: updatedProject.ratings.length,
+      status: updatedProject.status
+    });
+  } catch (error) {
+    console.error("Error in rating handler:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.get("/students/all", authMiddleware, async (req, res) => {
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  
+  try {
+    // Get all students
+    const students = await User.find({ role: "student" })
+      .select("username name email");
+    
+    res.json(students);
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Provide Feedback on Project (Teacher Only)
+router.post("/:id/feedback", authMiddleware, async (req, res) => {
+  // Debug log
+  console.log("Feedback request received from user:", req.user);
+  
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Only teachers can provide feedback" });
+  }
+  
+  try {
+    const { feedbackText, suggestedSdg } = req.body;
+    
+    // Log the feedback details for debugging
+    console.log("Feedback details:", { feedbackText, suggestedSdg });
+    
+    // First find the project by ID without validation
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) return res.status(404).json({ message: "Project not found" });
+    
+    // Create a new feedback object
+    const newFeedback = {
+      teacher: req.user.id,
+      text: feedbackText,
+      suggestedSdg: suggestedSdg || "",
+      createdAt: new Date()
+    };
+    
+    // Update using findByIdAndUpdate to avoid validation issues
+    // This bypasses validation for fields we're not updating
+    const updatedProject = await Project.findByIdAndUpdate(
+      req.params.id,
+      { $push: { feedback: newFeedback } },
+      { new: true }
+    );
+    
+    // Populate teacher info in the response
+    const populatedProject = await Project.findById(updatedProject._id)
+      .populate("feedback.teacher", "username name email");
+
+    res.json({ 
+      message: "Feedback submitted successfully",
+      feedback: populatedProject.feedback
+    });
+  } catch (error) {
+    console.error("Error in feedback handler:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Change Project Status (Teacher Only)
+router.put("/:id/status", authMiddleware, async (req, res) => {
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Only teachers can update project status" });
+  }
+  
+  try {
+    const { status } = req.body;
+    const validStatuses = ["Pending", "In Review", "Approved", "Rejected"];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+    
+    const project = await Project.findById(req.params.id);
+    
+    if (!project) return res.status(404).json({ message: "Project not found" });
+    
+    project.status = status;
     await project.save();
 
-    res.json({ likes: project.likes });
+    res.json({ 
+      message: `Project status updated to ${status}`,
+      status: project.status 
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// Rate a Project
-router.post("/:id/rate", authMiddleware, async (req, res) => {
+// Grade Project Team Members (Teacher Only)
+router.post("/:id/grade-team", authMiddleware, async (req, res) => {
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Only teachers can grade projects" });
+  }
+  
   try {
-    const { rating } = req.body;
+    const { teamGrades } = req.body;
     const project = await Project.findById(req.params.id);
     
     if (!project) return res.status(404).json({ message: "Project not found" });
     
-    // Check if user has already rated
-    const existingRatingIndex = project.ratings.findIndex(
-      r => r.user.toString() === req.user.id
-    );
-
-    if (existingRatingIndex > -1) {
-      // Update existing rating
-      project.ratings[existingRatingIndex].rating = rating;
-    } else {
-      // Add new rating
-      project.ratings.push({
-        user: req.user.id,
-        rating
-      });
+    // Update team member grades
+    if (!project.teamMembers) {
+      project.teamMembers = [];
     }
-
+    
+    // Update grades for existing team members
+    teamGrades.forEach(grade => {
+      const memberIndex = project.teamMembers.findIndex(
+        member => member.name === grade.name
+      );
+      
+      if (memberIndex !== -1) {
+        project.teamMembers[memberIndex].grade = grade.grade;
+      }
+    });
+    
     await project.save();
 
     res.json({ 
-      averageRating: project.averageRating,
-      ratings: project.ratings.length 
+      message: "Team grades updated successfully",
+      teamMembers: project.teamMembers 
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -160,6 +471,7 @@ router.get("/", async (req, res) => {
   const { 
     category, 
     sdg,
+    status,
     search,
     sortBy = 'createdAt', 
     orderBy = 'desc',
@@ -179,6 +491,10 @@ router.get("/", async (req, res) => {
       query.sdgGoals = { $in: [sdg] };
     }
     
+    if (status) {
+      query.status = status;
+    }
+    
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -189,7 +505,7 @@ router.get("/", async (req, res) => {
     
     const options = {
       sort: { [sortBy]: orderBy === 'desc' ? -1 : 1 },
-      populate: { path: "student", select: "username email" },
+      populate: { path: "student", select: "username name email" },
       limit: Number(limit),
       skip: (Number(page) - 1) * Number(limit)
     };
@@ -211,7 +527,9 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate("student", "username name email") // Populate with all possible fields
+      .populate("student", "username name email")
+      .populate("ratings.user", "username name")
+      .populate("feedback.teacher", "username name");
     
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
@@ -293,7 +611,7 @@ router.get("/sdg/:sdgGoal", async (req, res) => {
     
     const options = {
       sort: { createdAt: -1 },
-      populate: { path: "student", select: "username email" },
+      populate: { path: "student", select: "username email name" },
       limit: Number(limit),
       skip: (Number(page) - 1) * Number(limit)
     };
@@ -344,6 +662,72 @@ router.get("/user/me", authMiddleware, async (req, res) => {
     
     res.json({ projects });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all students with their projects count and grades
+router.get("/students/stats", authMiddleware, async (req, res) => {
+  // Check if user is a teacher
+  if (req.user.role !== "teacher") {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  
+  try {
+    console.log("Fetching students stats");
+    
+    // Get all students
+    const students = await User.find({ role: "student" })
+      .select("username name email");
+      
+    console.log(`Found ${students.length} students`);
+    
+    // For each student, get their projects count and average grade
+    const studentsWithStats = await Promise.all(students.map(async (student) => {
+      const projects = await Project.find({ student: student._id });
+      
+      console.log(`Student ${student.username}: ${projects.length} projects`);
+      
+      // Calculate average grade
+      let totalRating = 0;
+      let ratedProjects = 0;
+      
+      projects.forEach(project => {
+        if (project.averageRating > 0) {
+          totalRating += project.averageRating;
+          ratedProjects++;
+        }
+      });
+      
+      const averageRating = ratedProjects > 0 ? totalRating / ratedProjects : 0;
+      
+      // Convert numerical grade to letter grade
+      let letterGrade = "N/A";
+      if (averageRating > 0) {
+        if (averageRating >= 4.5) letterGrade = "A";
+        else if (averageRating >= 4.0) letterGrade = "A-";
+        else if (averageRating >= 3.5) letterGrade = "B+";
+        else if (averageRating >= 3.0) letterGrade = "B";
+        else if (averageRating >= 2.5) letterGrade = "B-";
+        else if (averageRating >= 2.0) letterGrade = "C";
+        else letterGrade = "D";
+      }
+      
+      return {
+        id: student._id,
+        username: student.username, // This is a number (student ID)
+        name: student.name,
+        email: student.email,
+        projectsCount: projects.length,
+        averageGrade: letterGrade,
+        averageRating: averageRating
+      };
+    }));
+    
+    console.log(`Returning stats for ${studentsWithStats.length} students`);
+    res.json(studentsWithStats);
+  } catch (error) {
+    console.error("Error in students/stats endpoint:", error);
     res.status(500).json({ error: error.message });
   }
 });

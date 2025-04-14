@@ -99,35 +99,10 @@ const App = () => {
           }
         />
 
-
-
-        
-
         {/* Teacher Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <TeacherRoute>
-              <Dashboard />
-            </TeacherRoute>
-          }
-        />
-        <Route
-          path="/students"
-          element={
-            <TeacherRoute>
-              <Students />
-            </TeacherRoute>
-          }
-        />
-        <Route
-          path="/feedback"
-          element={
-            <TeacherRoute>
-              <FeedbackModal />
-            </TeacherRoute>
-          }
-        />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/students" element={<Students />} />
+        <Route path="/feedback" element={<FeedbackModal />} />
 
         {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />

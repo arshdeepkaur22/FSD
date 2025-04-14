@@ -75,8 +75,7 @@ const ProjectSubmission = () => {
     submissionData.append("githubLink", formData.githubLink);
     submissionData.append("deployedLink", formData.deployedLink);
     
-// Add student ID from localStorage
-submissionData.append("student", userId);
+    // Don't need to explicitly add student ID, as it will be extracted from token on server side
 
     // Add SDG goals and justification
     formData.sdgGoals.forEach(goal => {
@@ -95,7 +94,7 @@ submissionData.append("student", userId);
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            // Assuming you'll send an authentication token
+            // Sending authentication token
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }

@@ -41,71 +41,88 @@ const Project = () => {
     try {
       // Get token from localStorage
       const token = localStorage.getItem("token");
-
+  
       if (!token) {
         alert("Please login to like projects");
         return;
       }
-
+  
+      console.log(`Liking project: ${id}`);
+  
       const res = await axios.post(
         `http://localhost:5000/api/projects/${id}/like`,
-        {},
+        {}, // Empty body is fine
         {
           headers: {
             Authorization: `Bearer ${token}`,
-          },
+            'Content-Type': 'application/json'
+          }
         }
       );
-
+  
+      console.log("Like response:", res.data);
+  
       // Update local state to reflect new like count
       setProject({
         ...project,
         likes: res.data.likes,
       });
     } catch (error) {
-      console.error("Error liking project", error);
-      alert("Failed to like project");
+      console.error("Error liking project:", error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+      alert(`Failed to like project: ${errorMessage}`);
     }
   };
 
-  const handleRate = async (rating) => {
-    try {
-      // Only teachers can rate
-      if (!isTeacher) {
-        alert("Only teachers can rate projects");
-        return;
-      }
+// Fixed rating handler for the Project view
+const handleRate = async (rating) => {
+  try {
+    // Only teachers can rate
+    if (!isTeacher) {
+      alert("Only teachers can rate projects");
+      return;
+    }
 
-      // Get token from localStorage
-      const token = localStorage.getItem("token");
+    // Get token from localStorage
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Please login to rate projects");
-        return;
-      }
-
-      const res = await axios.post(
-        `http://localhost:5000/api/projects/${id}/rate`,
-        { rating },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+    if (!token) {
+      alert("Please login to rate projects");
+      return;
+    }
+    
+    console.log(`Rating project ${id} with ${rating} stars`);
+    
+    // Make sure rating is a valid number
+    const numericRating = parseInt(rating, 10);
+    
+    // Send the rating request
+    const res = await axios.post(
+      `http://localhost:5000/api/projects/${id}/rate`,
+      { rating: numericRating }, // Ensure we're sending a number
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      );
+      }
+    );
+    
+    console.log("Rating response:", res.data);
 
-      // Update local state to reflect new rating
-      setProject({
-        ...project,
-        averageRating: res.data.averageRating,
-      });
+    // Update local state to reflect new rating
+    setProject({
+      ...project,
+      averageRating: res.data.averageRating
+    });
 
-      setUserRating(rating);
-    } catch (error) {
-      console.error("Error rating project", error);
-      alert("Failed to rate project");
-    }
-  };
+    setUserRating(numericRating);
+  } catch (error) {
+    console.error("Error rating project:", error);
+    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+    alert(`Failed to rate project: ${errorMessage}`);
+  }
+};
 
   // Function to render SDG goals badges
   const renderSdgBadges = (sdgGoals) => {
@@ -125,6 +142,15 @@ const Project = () => {
     );
   };
 
+  // Get grade color based on the letter grade
+  const getGradeColor = (grade) => {
+    if (!grade) return "bg-gray-800 text-gray-300";
+    
+    if (grade.startsWith('A')) return "bg-green-900/60 text-green-300";
+    if (grade.startsWith('B')) return "bg-blue-900/60 text-blue-300";
+    if (grade.startsWith('C')) return "bg-yellow-900/60 text-yellow-300";
+    return "bg-red-900/60 text-red-300";
+  };
 
   const getStudentName = () => {
     if (!project || !project.student) return "Anonymous";
@@ -232,6 +258,15 @@ const Project = () => {
                 <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-xs">
                   {project.category}
                 </div>
+                
+                {/* Display project grade badge if available */}
+                {project.grade && (
+                  <div className="absolute top-4 left-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(project.grade)}`}>
+                      Grade: {project.grade}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="p-6">
@@ -243,6 +278,17 @@ const Project = () => {
                   <span className="mx-2">•</span>
                   <span>
                     {new Date(project.createdAt).toLocaleDateString()}
+                  </span>
+                  
+                  {/* Show project status */}
+                  <span className="mx-2">•</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                    project.status === 'Approved' ? 'bg-green-800 text-green-200' :
+                    project.status === 'In Review' ? 'bg-yellow-800 text-yellow-200' :
+                    project.status === 'Rejected' ? 'bg-red-800 text-red-200' :
+                    'bg-gray-800 text-gray-200'
+                  }`}>
+                    {project.status}
                   </span>
                 </div>
 
@@ -285,6 +331,30 @@ const Project = () => {
                         <p>{project.sdgJustification}</p>
                       </div>
                     )}
+                  </div>
+                )}
+                
+                {/* Team Members Section (if any) */}
+                {project.teamMembers && project.teamMembers.length > 0 && (
+                  <div className="mb-6">
+                    <h2 className="text-xl font-semibold mb-2 text-purple-200">
+                      Team Members
+                    </h2>
+                    <div className="bg-[#2A2A2A] rounded-lg p-4">
+                      {project.teamMembers.map((member, index) => (
+                        <div key={index} className="flex justify-between items-center mb-2 last:mb-0 pb-2 last:pb-0 border-b border-gray-700 last:border-0">
+                          <div>
+                            <span className="font-medium">{member.name}</span>
+                            <span className="text-gray-400 text-sm ml-2">({member.role})</span>
+                          </div>
+                          {member.grade && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${getGradeColor(member.grade)}`}>
+                              {member.grade}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -362,34 +432,41 @@ const Project = () => {
               </div>
             )}
 
-            {/* Teacher Feedback Section */}
-            {(isTeacher || project.feedback) && (
-              <div className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl p-6">
-                <h2 className="text-xl font-semibold mb-4 text-purple-200">
-                  Teacher Feedback
-                </h2>
-                {project.feedback ? (
-                  <div className="bg-[#2A2A2A] rounded-xl p-4">
-                    <p className="text-gray-300">{project.feedback}</p>
-                  </div>
-                ) : isTeacher ? (
-                  <div className="bg-[#2A2A2A] rounded-xl p-4">
-                    <textarea
-                      className="w-full bg-[#363636] text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      rows={4}
-                      placeholder="Add your feedback here..."
-                    ></textarea>
-                    <button className="mt-3 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-white transition">
-                      Submit Feedback
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-gray-400">
-                    No feedback has been provided yet.
-                  </p>
-                )}
-              </div>
-            )}
+            {/* Teacher Feedback Section - Updated to handle array of feedback */}
+            <div className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-4 text-purple-200">
+                Teacher Feedback
+              </h2>
+              
+              {project.feedback && project.feedback.length > 0 ? (
+                <div className="space-y-4">
+                  {project.feedback.map((item, index) => (
+                    <div key={index} className="bg-[#2A2A2A] rounded-xl p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-medium text-purple-300">
+                            {item.teacher?.name || item.teacher?.username || "Teacher"}
+                          </span>
+                          <span className="text-xs text-gray-400 ml-2">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {item.suggestedSdg && (
+                          <span className="bg-green-800/50 text-green-200 text-xs px-2 py-1 rounded-full">
+                            Suggested SDG: {item.suggestedSdg}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-300">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 bg-[#2A2A2A] rounded-xl p-4">
+                  No feedback has been provided yet.
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}
@@ -401,6 +478,18 @@ const Project = () => {
               </h2>
 
               <div className="space-y-4">
+                {/* Project Grade (if available) */}
+                {project.grade && (
+                  <div>
+                    <h3 className="text-sm text-gray-400 mb-2">Project Grade</h3>
+                    <div className="flex items-center">
+                      <span className={`px-3 py-1 rounded-lg ${getGradeColor(project.grade)}`}>
+                        {project.grade}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              
                 {/* Rating */}
                 <div>
                   <h3 className="text-sm text-gray-400 mb-2">Rating</h3>
@@ -517,6 +606,18 @@ const Project = () => {
                     <div className="text-gray-400 text-sm">Category:</div>
                     <div className="text-right">{project.category}</div>
 
+                    <div className="text-gray-400 text-sm">Status:</div>
+                    <div className="text-right">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${
+                        project.status === 'Approved' ? 'bg-green-800 text-green-200' :
+                        project.status === 'In Review' ? 'bg-yellow-800 text-yellow-200' :
+                        project.status === 'Rejected' ? 'bg-red-800 text-red-200' :
+                        'bg-gray-800 text-gray-200'
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+
                     <div className="text-gray-400 text-sm">Created:</div>
                     <div className="text-right">
                       {new Date(project.createdAt).toLocaleDateString()}
@@ -539,7 +640,7 @@ const Project = () => {
             </div>
 
             {/* Student Info Card */}
-            {project.student && (
+            {project.student && typeof project.student === 'object' && (
               <div className="bg-[#1E1E1E] rounded-2xl shadow-2xl p-6">
                 <h2 className="text-xl font-semibold mb-4 text-purple-200">
                   Student Information
