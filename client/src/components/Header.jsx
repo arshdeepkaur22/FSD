@@ -1,37 +1,67 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  // Check if user is logged in
-  const isLoggedIn = localStorage.getItem('token') !== null;
-  
-  // Get user role (student or teacher)
-  const userRole = localStorage.getItem('userRole');
-  
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Get token from localStorage
+  const token = localStorage.getItem("token");
+
+  // Check if user is logged in (ensure it's a proper token, not null or undefined)
+  const isLoggedIn = !!token;
+
+  // Get user data from localStorage only if logged in
+  const userData = isLoggedIn
+    ? JSON.parse(localStorage.getItem("user") || "{}")
+    : {};
+  const userRole = isLoggedIn
+    ? userData.role || localStorage.getItem("userRole")
+    : null;
+
+  // Determine user type (only if logged in)
+  const isStudent = isLoggedIn && userRole === "student";
+  const isTeacher = isLoggedIn && userRole === "teacher";
+
+  // Clear all user data and navigate to login
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userRole');
-    navigate('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
-  
+
   const handleSearch = (e) => {
     e.preventDefault();
     // Add search functionality here
-    console.log('Searching for:', searchTerm);
+    console.log("Searching for:", searchTerm);
+
+    // Navigate to search results page (if implemented)
+    // navigate(`/search?term=${encodeURIComponent(searchTerm)}`);
   };
 
   return (
     <nav className="sticky top-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          <Link to="/" className="text-2xl font-bold tracking-tight text-purple-400">
-            Projecthub
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <span className="text-2xl font-bold tracking-tight text-white">
+              Projecthub
+            </span>
+            {isTeacher && (
+              <span className="bg-purple-700 text-white text-xs px-2 py-1 rounded-full">
+                Teacher
+              </span>
+            )}
+            {isStudent && (
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                Student
+              </span>
+            )}
           </Link>
-          
+
           <div className="flex items-center space-x-6">
             {/* Search Bar */}
             <div className="relative">
@@ -43,96 +73,105 @@ const Header = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-[#2C2C2C] text-white pl-10 pr-4 py-2 rounded-full w-72 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
                 />
-                <svg 
-                  className="absolute left-3 top-3 w-5 h-5 text-gray-400" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="absolute left-3 top-3 w-5 h-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
               </form>
             </div>
-            
-            {/* Navigation Links */}
-            <nav className="flex space-x-4 text-gray-300 hover:*:text-white">
+
+            {/* Navigation Links - Conditional based on user role */}
+            <nav className="flex space-x-4 text-gray-300">
+              {/* Common links for all users */}
+              <Link to="/" className="hover:text-white transition">
+                Home
+              </Link>
+
               {isLoggedIn ? (
                 <>
-                  {/* Common links for logged in users */}
-                  <Link to="/" className="hover:text-purple-400 transition">
-                    Home
-                  </Link>
-                  <Link to="/collaborationHub" className="hover:text-purple-400 transition">
-                    Collaborations
-                  </Link>
-                  <Link to="/leaderboard" className="hover:text-purple-400 transition">
+                  {/* Links for all authenticated users */}
+                  <Link
+                    to="/leaderboard"
+                    className="hover:text-white transition"
+                  >
                     Leaderboard
                   </Link>
-                  <Link to="/mysubmissions" className="hover:text-purple-400 transition">
-                    My Submissions
+                  <Link
+                    to="/collaborationHub"
+                    className="hover:text-white transition"
+                  >
+                    Collaborations
                   </Link>
-                  
+                  <Link
+                    to="/mentorship"
+                    className="hover:text-white transition"
+                  >
+                    Mentorships
+                  </Link>
+
                   {/* Student-specific links */}
-                  {userRole === 'student' && (
-                    <Link to="/projectSubmission" className="hover:text-purple-400 transition">
-                      My Submissions
+                  {isStudent && (
+                    <Link
+                      to="/mysubmissions"
+                      className="hover:text-white transition"
+                    >
+                      My Projects
                     </Link>
                   )}
-                  
+
                   {/* Teacher-specific links */}
-                  {userRole === 'teacher' && (
-                    <>
-                      <Link to="/dashboard" className="hover:text-purple-400 transition">
-                        Dashboard
-                      </Link>
-                      <Link to="/students" className="hover:text-purple-400 transition">
-                        Students
-                      </Link>
-                    </>
+                  {isTeacher && (
+                    <Link
+                      to="/dashboard"
+                      className="hover:text-white transition"
+                    >
+                      Dashboard
+                    </Link>
                   )}
-                  
+
                   {/* Logout Button */}
-                  <button 
+                  <button
                     onClick={handleLogout}
-                    className="hover:text-purple-400 transition"
+                    className="hover:text-white transition"
                   >
                     Logout
                   </button>
                 </>
               ) : (
                 <>
-                  {/* Links for non-logged in users */}
-                  <Link to="/" className="hover:text-purple-400 transition">
-                    Home
-                  </Link>
-                  <Link to="/login" className="hover:text-purple-400 transition">
+                  {/* Links for non-logged in users (viewers) */}
+                  <Link to="/login" className="hover:text-white transition">
                     Login
                   </Link>
-                  <Link to="/register" className="hover:text-purple-400 transition">
+                  <Link to="/register" className="hover:text-white transition">
                     Register
                   </Link>
                 </>
               )}
             </nav>
-            
-            {/* Submit Project Button - only show if logged in */}
-            {isLoggedIn && (
-              <Link 
-                to="/projectSubmission" 
-                className="bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-full font-semibold transition transform active:scale-95"
-              >
-                Submit Project
-              </Link>
-            )}
 
-
-            
+            {/* Action Buttons - Conditional based on user role */}
+            <div className="flex space-x-3">
+              {/* Student-specific action button - shown only if logged in and is a student */}
+              {isLoggedIn && isStudent && (
+                <Link
+                  to="/projectSubmission"
+                  className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-full font-semibold transition transform active:scale-95"
+                >
+                  Submit Project
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>

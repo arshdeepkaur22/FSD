@@ -68,7 +68,6 @@ const Home = () => {
     }
   };
 
-
   // Function to render SDG goals badges
   const renderSdgBadges = (sdgGoals) => {
     if (!sdgGoals || sdgGoals.length === 0) return null;
@@ -162,7 +161,7 @@ const Home = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
+          <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-400">
             Student Project Showcase
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto">
@@ -179,7 +178,7 @@ const Home = () => {
               key={category}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 activeCategory === category
-                  ? "bg-purple-600 text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
               onClick={() => setActiveCategory(category)}
@@ -192,7 +191,7 @@ const Home = () => {
         {/* Loading and Error States */}
         {loading && (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         )}
 
@@ -201,7 +200,7 @@ const Home = () => {
             <p className="text-red-400 mb-4">{error}</p>
             <button
               onClick={() => setActiveCategory(activeCategory)}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition"
             >
               Try Again
             </button>
@@ -222,7 +221,7 @@ const Home = () => {
                 {projects.map((project) => (
                   <div
                     key={project._id}
-                    className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-900/30"
+                    className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-white/30"
                   >
                     <div className="relative">
                       <img
@@ -239,7 +238,7 @@ const Home = () => {
                       </div>
                     </div>
                     <div className="p-5">
-                      <h2 className="text-xl font-bold mb-2 text-purple-300">
+                      <h2 className="text-xl font-bold mb-2 text-white">
                         {project.title}
                       </h2>
                       <p className="text-gray-400 text-sm mb-3">
@@ -278,7 +277,7 @@ const Home = () => {
                             href={project.githubLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                            className="flex items-center text-white hover:text-white text-sm"
                           >
                             <svg
                               className="w-4 h-4 mr-2"
@@ -326,7 +325,7 @@ const Home = () => {
                         <div className="flex items-center space-x-4">
                           <button
                             onClick={() => handleLike(project._id)}
-                            className="flex items-center text-gray-400 hover:text-purple-400 transition"
+                            className="flex items-center text-gray-400 hover:text-white transition"
                           >
                             <svg
                               className="w-5 h-5 mr-1"
@@ -370,7 +369,7 @@ const Home = () => {
                         {/* View Details Button - Update this section in your Home.jsx */}
                         <Link
                           to={`/projects/${project._id}`}
-                          className="text-purple-400 hover:text-purple-300 text-sm flex items-center"
+                          className="text-white hover:text-white text-sm flex items-center"
                         >
                           View Details
                           <svg
@@ -393,7 +392,7 @@ const Home = () => {
                         {/* Wrap the entire card in a Link component */}
                         <Link
                           to={`/projects/${project._id}`}
-                          className="block bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-900/30"
+                          className="block bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:scale-[1.02] hover:shadow-white/30"
                         >
                           {/* Card content... */}
                         </Link>

@@ -68,7 +68,7 @@ const CollaborationDetail = () => {
 
   const fetchRepositoryInfo = async (repoUrl) => {
     if (!repoUrl) return;
-    
+
     setLoadingRepo(true);
     try {
       const result = await GitHubService.getRepositoryInfo(repoUrl);
@@ -134,7 +134,11 @@ const CollaborationDetail = () => {
 
   const handleApplicationStatus = async (applicationId, status) => {
     try {
-      await collaborationsApi.updateApplicationStatus(id, applicationId, status);
+      await collaborationsApi.updateApplicationStatus(
+        id,
+        applicationId,
+        status
+      );
       alert(`Applicant ${status.toLowerCase()} successfully`);
       fetchCollaboration();
     } catch (error) {
@@ -197,8 +201,8 @@ const CollaborationDetail = () => {
   const canApply =
     !isOwner && !userApplication && collaboration?.status === "Open";
   const canRequestMentorship =
-    !isOwner && 
-    (!userMentorshipRequest || userMentorshipRequest.status === "Rejected") && 
+    !isOwner &&
+    (!userMentorshipRequest || userMentorshipRequest.status === "Rejected") &&
     collaboration?.status === "Open";
 
   // Get creator display name
@@ -209,7 +213,7 @@ const CollaborationDetail = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
-     <Header></Header>
+      <Header></Header>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -218,7 +222,7 @@ const CollaborationDetail = () => {
           <div className="mb-6">
             <button
               onClick={() => navigate("/collaborationHub")}
-              className="flex items-center text-purple-400 hover:text-purple-300 transition"
+              className="flex items-center text-white hover:text-purple-300 transition"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -300,21 +304,26 @@ const CollaborationDetail = () => {
                       <h2 className="text-xl font-semibold text-purple-300 mb-4">
                         GitHub Repository
                       </h2>
-                      
+
                       <div className="flex items-center mb-4">
-                        <svg className="w-5 h-5 text-white mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg
+                          className="w-5 h-5 text-white mr-2"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
                           <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                         </svg>
-                        <a 
-                          href={collaboration.githubRepository} 
-                          target="_blank" 
+                        <a
+                          href={collaboration.githubRepository}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-300 transition"
+                          className="text-white hover:text-white transition"
                         >
                           {collaboration.githubRepository}
                         </a>
                       </div>
-                      
+
                       {loadingRepo ? (
                         <div className="flex items-center justify-center py-4">
                           <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
@@ -323,41 +332,65 @@ const CollaborationDetail = () => {
                         <div className="space-y-3">
                           <div className="flex flex-wrap gap-3">
                             <div className="flex items-center bg-[#333] rounded-md px-3 py-1">
-                              <svg className="w-4 h-4 text-yellow-400 mr-1" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                              <svg
+                                className="w-4 h-4 text-yellow-400 mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 16 16"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
                                 <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25z" />
                               </svg>
                               <span>{repoInfo.stars || 0} Stars</span>
                             </div>
                             <div className="flex items-center bg-[#333] rounded-md px-3 py-1">
-                              <svg className="w-4 h-4 text-blue-400 mr-1" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                              <svg
+                                className="w-4 h-4 text-white mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 16 16"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
                                 <path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z" />
                               </svg>
                               <span>{repoInfo.forks || 0} Forks</span>
                             </div>
                             <div className="flex items-center bg-[#333] rounded-md px-3 py-1">
-                              <svg className="w-4 h-4 text-purple-400 mr-1" fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                              <svg
+                                className="w-4 h-4 text-white mr-1"
+                                fill="currentColor"
+                                viewBox="0 0 16 16"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
                                 <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
                                 <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z" />
                               </svg>
                               <span>{repoInfo.issues || 0} Issues</span>
                             </div>
                           </div>
-                          
+
                           {repoInfo.languages && (
                             <div className="mt-3">
-                              <h3 className="text-sm font-medium text-gray-300 mb-2">Languages:</h3>
+                              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                                Languages:
+                              </h3>
                               <div className="flex flex-wrap gap-2">
-                                {Object.entries(repoInfo.languages).map(([language, percentage]) => (
-                                  <span key={language} className="text-xs px-2 py-1 bg-[#333] rounded-md">
-                                    {language}: {percentage}%
-                                  </span>
-                                ))}
+                                {Object.entries(repoInfo.languages).map(
+                                  ([language, percentage]) => (
+                                    <span
+                                      key={language}
+                                      className="text-xs px-2 py-1 bg-[#333] rounded-md"
+                                    >
+                                      {language}: {percentage}%
+                                    </span>
+                                  )
+                                )}
                               </div>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <p className="text-gray-400 italic">Repository information unavailable</p>
+                        <p className="text-gray-400 italic">
+                          Repository information unavailable
+                        </p>
                       )}
                     </div>
                   )}
@@ -418,14 +451,15 @@ const CollaborationDetail = () => {
                               Your skills:
                             </h3>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {userApplication.skills && userApplication.skills.map((skill, idx) => (
-                                <span
-                                  key={idx}
-                                  className="text-xs bg-[#444444] text-gray-200 px-2 py-1 rounded"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
+                              {userApplication.skills &&
+                                userApplication.skills.map((skill, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs bg-[#444444] text-gray-200 px-2 py-1 rounded"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
                             </div>
                           </div>
                           {userApplication.githubProfile && (
@@ -433,11 +467,11 @@ const CollaborationDetail = () => {
                               <h3 className="text-sm text-gray-400 mb-1">
                                 GitHub Profile:
                               </h3>
-                              <a 
+                              <a
                                 href={userApplication.githubProfile}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-blue-300 transition text-sm"
+                                className="text-white hover:text-white transition text-sm"
                               >
                                 {userApplication.githubProfile}
                               </a>
@@ -452,7 +486,7 @@ const CollaborationDetail = () => {
                             </p>
                           </div>
                         </div>
-                        
+
                         {/* Mentorship Request Button */}
                         {canRequestMentorship && (
                           <div className="mt-4">
@@ -464,9 +498,11 @@ const CollaborationDetail = () => {
                                 Request Mentorship
                               </button>
                             ) : (
-                              <MentorshipRequestForm 
+                              <MentorshipRequestForm
                                 mentorshipForm={mentorshipForm}
-                                handleInputChange={(e) => handleInputChange(e, setMentorshipForm)}
+                                handleInputChange={(e) =>
+                                  handleInputChange(e, setMentorshipForm)
+                                }
                                 handleSubmit={handleMentorshipRequest}
                                 isSubmitting={requestingMentorship}
                                 onCancel={() => setShowMentorshipForm(false)}
@@ -501,13 +537,15 @@ const CollaborationDetail = () => {
                                 id="skills"
                                 name="skills"
                                 value={applicationForm.skills}
-                                onChange={(e) => handleInputChange(e, setApplicationForm)}
+                                onChange={(e) =>
+                                  handleInputChange(e, setApplicationForm)
+                                }
                                 required
                                 className="w-full bg-[#363636] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 placeholder="E.g., React, Node.js, MongoDB"
                               />
                             </div>
-                            
+
                             <div>
                               <label
                                 htmlFor="githubProfile"
@@ -520,15 +558,18 @@ const CollaborationDetail = () => {
                                 id="githubProfile"
                                 name="githubProfile"
                                 value={applicationForm.githubProfile}
-                                onChange={(e) => handleInputChange(e, setApplicationForm)}
+                                onChange={(e) =>
+                                  handleInputChange(e, setApplicationForm)
+                                }
                                 className="w-full bg-[#363636] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 placeholder="https://github.com/yourusername"
                               />
                               <p className="text-xs text-gray-400 mt-1">
-                                Optional: Add your GitHub profile for verification
+                                Optional: Add your GitHub profile for
+                                verification
                               </p>
                             </div>
-                            
+
                             <div>
                               <label
                                 htmlFor="message"
@@ -540,7 +581,9 @@ const CollaborationDetail = () => {
                                 id="message"
                                 name="message"
                                 value={applicationForm.message}
-                                onChange={(e) => handleInputChange(e, setApplicationForm)}
+                                onChange={(e) =>
+                                  handleInputChange(e, setApplicationForm)
+                                }
                                 required
                                 rows={4}
                                 className="w-full bg-[#363636] text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -575,7 +618,7 @@ const CollaborationDetail = () => {
                             ? "You've already applied to this request"
                             : "Applications are Closed"}
                         </p>
-                        
+
                         {/* Mentorship Request Button for users who can't apply but can request mentorship */}
                         {canRequestMentorship && (
                           <div className="mt-4">
@@ -587,9 +630,11 @@ const CollaborationDetail = () => {
                                 Request Mentorship
                               </button>
                             ) : (
-                              <MentorshipRequestForm 
+                              <MentorshipRequestForm
                                 mentorshipForm={mentorshipForm}
-                                handleInputChange={(e) => handleInputChange(e, setMentorshipForm)}
+                                handleInputChange={(e) =>
+                                  handleInputChange(e, setMentorshipForm)
+                                }
                                 handleSubmit={handleMentorshipRequest}
                                 isSubmitting={requestingMentorship}
                                 onCancel={() => setShowMentorshipForm(false)}
@@ -600,7 +645,7 @@ const CollaborationDetail = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Show mentorship request status if user has requested mentorship */}
                   {userMentorshipRequest && (
                     <div className="bg-[#2C2C2C] rounded-xl p-6">
@@ -622,28 +667,43 @@ const CollaborationDetail = () => {
                             {userMentorshipRequest.status}
                           </span>
                         </div>
-                        
+
                         <div>
                           <h3 className="text-sm text-gray-400 mb-1">Topic:</h3>
-                          <p className="text-gray-200 font-medium">{userMentorshipRequest.topic}</p>
+                          <p className="text-gray-200 font-medium">
+                            {userMentorshipRequest.topic}
+                          </p>
                         </div>
-                        
+
                         <div className="mt-3">
-                          <h3 className="text-sm text-gray-400 mb-1">Preferred Time Slots:</h3>
-                          <p className="text-gray-200">{userMentorshipRequest.preferredTimeSlots}</p>
+                          <h3 className="text-sm text-gray-400 mb-1">
+                            Preferred Time Slots:
+                          </h3>
+                          <p className="text-gray-200">
+                            {userMentorshipRequest.preferredTimeSlots}
+                          </p>
                         </div>
-                        
+
                         <div className="border-t border-gray-600 my-3 pt-3">
-                          <h3 className="text-sm text-gray-400 mb-1">Description:</h3>
-                          <p className="text-gray-200 whitespace-pre-line">{userMentorshipRequest.description}</p>
+                          <h3 className="text-sm text-gray-400 mb-1">
+                            Description:
+                          </h3>
+                          <p className="text-gray-200 whitespace-pre-line">
+                            {userMentorshipRequest.description}
+                          </p>
                         </div>
-                        
-                        {userMentorshipRequest.status === "Accepted" && userMentorshipRequest.mentorMessage && (
-                          <div className="border-t border-gray-600 my-3 pt-3">
-                            <h3 className="text-sm text-gray-400 mb-1">Message from Mentor:</h3>
-                            <p className="text-gray-200 whitespace-pre-line">{userMentorshipRequest.mentorMessage}</p>
-                          </div>
-                        )}
+
+                        {userMentorshipRequest.status === "Accepted" &&
+                          userMentorshipRequest.mentorMessage && (
+                            <div className="border-t border-gray-600 my-3 pt-3">
+                              <h3 className="text-sm text-gray-400 mb-1">
+                                Message from Mentor:
+                              </h3>
+                              <p className="text-gray-200 whitespace-pre-line">
+                                {userMentorshipRequest.mentorMessage}
+                              </p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   )}
@@ -720,7 +780,7 @@ const CollaborationDetail = () => {
                           {collaboration.applicants?.length || 0}
                         </p>
                       </div>
-                      
+
                       <div>
                         <h3 className="text-sm text-gray-400 mb-1">
                           Mentorship Requests:
@@ -788,18 +848,18 @@ const CollaborationDetail = () => {
                                   )}
                                 </div>
                               </div>
-                              
+
                               {applicant.githubProfile && (
                                 <div className="mb-3">
                                   <span className="text-xs text-gray-400">
                                     GitHub:
                                   </span>
                                   <div className="mt-1">
-                                    <a 
+                                    <a
                                       href={applicant.githubProfile}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-blue-400 hover:text-blue-300 transition text-xs"
+                                      className="text-white hover:text-white transition text-xs"
                                     >
                                       {applicant.githubProfile}
                                     </a>
@@ -848,14 +908,15 @@ const CollaborationDetail = () => {
                         </div>
                       </div>
                     )}
-                    
+
                   {/* Mentorship Requests Section (Only for owner) */}
                   {isOwner &&
                     collaboration.mentorshipRequests &&
                     collaboration.mentorshipRequests.length > 0 && (
                       <div className="bg-[#2C2C2C] rounded-xl p-6">
                         <h2 className="text-xl font-semibold text-purple-300 mb-4">
-                          Mentorship Requests ({collaboration.mentorshipRequests.length})
+                          Mentorship Requests (
+                          {collaboration.mentorshipRequests.length})
                         </h2>
                         <div className="space-y-4">
                           {collaboration.mentorshipRequests.map((request) => (
@@ -955,7 +1016,13 @@ const CollaborationDetail = () => {
 };
 
 // Mentorship Request Form Component
-const MentorshipRequestForm = ({ mentorshipForm, handleInputChange, handleSubmit, isSubmitting, onCancel }) => {
+const MentorshipRequestForm = ({
+  mentorshipForm,
+  handleInputChange,
+  handleSubmit,
+  isSubmitting,
+  onCancel,
+}) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -976,7 +1043,7 @@ const MentorshipRequestForm = ({ mentorshipForm, handleInputChange, handleSubmit
           placeholder="E.g., React Hooks, MongoDB Aggregation, CI/CD Setup"
         />
       </div>
-      
+
       <div>
         <label
           htmlFor="preferredTimeSlots"
@@ -997,7 +1064,7 @@ const MentorshipRequestForm = ({ mentorshipForm, handleInputChange, handleSubmit
           Optional: Specify your availability for mentoring sessions
         </p>
       </div>
-      
+
       <div>
         <label
           htmlFor="description"
@@ -1016,7 +1083,7 @@ const MentorshipRequestForm = ({ mentorshipForm, handleInputChange, handleSubmit
           placeholder="Describe what you'd like to learn and any specific questions or challenges you're facing..."
         />
       </div>
-      
+
       <div className="flex space-x-3">
         <button
           type="button"
@@ -1030,9 +1097,7 @@ const MentorshipRequestForm = ({ mentorshipForm, handleInputChange, handleSubmit
           disabled={isSubmitting}
           className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition disabled:opacity-70"
         >
-          {isSubmitting
-            ? "Submitting..."
-            : "Request Mentorship"}
+          {isSubmitting ? "Submitting..." : "Request Mentorship"}
         </button>
       </div>
     </form>

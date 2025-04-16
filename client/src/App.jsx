@@ -15,9 +15,10 @@ import Students from "./pages/Teachers/Students";
 import FeedbackModal from "./pages/Teachers/FeedbackModal";
 import CollaborationDetail from "./pages/CollaborationDetail";
 import CollaborationHub from "./pages/CollaborationHub";
-import Project from "./pages/Project"; // Assuming you have or will create this page
+import Project from "./pages/Project";
 import UserSubmissions from "./pages/UserSubmissions";
 import ProjectCard from "./pages/ProjectCard";
+import Mentorship from "./pages/Mentorship";
 
 // Protected Route component for authenticated routes
 const ProtectedRoute = ({ children }) => {
@@ -33,13 +34,35 @@ const ProtectedRoute = ({ children }) => {
 // Teacher Route component for teacher-only routes
 const TeacherRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("token") !== null;
-  const isTeacher = localStorage.getItem("userRole") === "teacher";
+
+  // Check user role from stored user data
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const isTeacher = userData.role === "teacher";
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   if (!isTeacher) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Student Route component for student-only routes
+const StudentRoute = ({ children }) => {
+  const isAuthenticated = localStorage.getItem("token") !== null;
+
+  // Check user role from stored user data
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const isStudent = userData.role === "student";
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isStudent) {
     return <Navigate to="/" replace />;
   }
 
@@ -55,8 +78,10 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Home />} />
         <Route path="/projects/:id" element={<Project />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/mentorship" element={<Mentorship />} />
 
-        {/* Protected Routes (need authentication) */}
+        {/* Protected Routes (require authentication) */}
         <Route
           path="/projectSubmission"
           element={
@@ -81,28 +106,41 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/leaderboard"
-          element={
-            <ProtectedRoute>
-              <Leaderboard />
-            </ProtectedRoute>
-          }
-        />
 
         <Route
           path="/mysubmissions"
           element={
             <ProtectedRoute>
-              <UserSubmissions></UserSubmissions>
+              <UserSubmissions />
             </ProtectedRoute>
           }
         />
 
         {/* Teacher Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/feedback" element={<FeedbackModal />} />
+        <Route
+          path="/dashboard"
+          element={
+            <TeacherRoute>
+              <Dashboard />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/students"
+          element={
+            <TeacherRoute>
+              <Students />
+            </TeacherRoute>
+          }
+        />
+        <Route
+          path="/feedback"
+          element={
+            <TeacherRoute>
+              <FeedbackModal />
+            </TeacherRoute>
+          }
+        />
 
         {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />

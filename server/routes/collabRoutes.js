@@ -404,4 +404,86 @@ router.put("/:id/mentorship/:requestId", async (req, res) => {
   }
 });
 
+router.get("/mentorship/all-pending", async (req, res) => {
+  try {
+    // Find all collaborations that have pending mentorship requests
+    const collaborations = await Collaboration.find({
+      "mentorshipRequests.status": "Pending"
+    })
+    .populate("createdBy", "username email")
+    .populate("mentorshipRequests.user", "username email");
+    
+    // Extract all pending mentorship requests with their collaboration info
+    const allRequests = [];
+    
+    collaborations.forEach(collab => {
+      const pendingRequests = collab.mentorshipRequests
+        .filter(req => req.status === "Pending")
+        .map(req => ({
+          _id: req._id,
+          topic: req.topic || "No topic provided",
+          description: req.description || "No description provided",
+          preferredTimeSlots: req.preferredTimeSlots || "",
+          status: req.status,
+          createdAt: req.createdAt,
+          user: req.user,
+          collaboration: {
+            _id: collab._id,
+            title: collab.title,
+            createdBy: collab.createdBy
+          }
+        }));
+      
+      allRequests.push(...pendingRequests);
+    });
+    
+    res.json({ requests: allRequests });
+  } catch (error) {
+    console.error("Error fetching mentorship requests:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all active mentorship requests (for teachers)
+router.get("/mentorship/all-active", async (req, res) => {
+  try {
+    // Find all collaborations that have accepted mentorship requests
+    const collaborations = await Collaboration.find({
+      "mentorshipRequests.status": "Accepted"
+    })
+    .populate("createdBy", "username email")
+    .populate("mentorshipRequests.user", "username email");
+    
+    // Extract all accepted mentorship requests with their collaboration info
+    const allRequests = [];
+    
+    collaborations.forEach(collab => {
+      const acceptedRequests = collab.mentorshipRequests
+        .filter(req => req.status === "Accepted")
+        .map(req => ({
+          _id: req._id,
+          topic: req.topic || "No topic provided",
+          description: req.description || "No description provided",
+          preferredTimeSlots: req.preferredTimeSlots || "",
+          status: req.status,
+          mentorMessage: req.mentorMessage || "",
+          createdAt: req.createdAt,
+          user: req.user,
+          collaboration: {
+            _id: collab._id,
+            title: collab.title,
+            createdBy: collab.createdBy
+          }
+        }));
+      
+      allRequests.push(...acceptedRequests);
+    });
+    
+    res.json({ requests: allRequests });
+  } catch (error) {
+    console.error("Error fetching active mentorship requests:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

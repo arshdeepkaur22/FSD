@@ -111,7 +111,7 @@ const UserSubmissions = () => {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-purple-300 mb-2">Your Project Submissions</h1>
+            <h1 className="text-3xl font-bold text-blue-300 mb-2">Your Project Submissions</h1>
             <p className="text-gray-400">
               Track performance and analytics for all your submitted projects
             </p>
@@ -121,7 +121,7 @@ const UserSubmissions = () => {
               onClick={() => setAnalyticsView("overview")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 analyticsView === "overview" 
-                  ? "bg-purple-600 text-white" 
+                  ? "bg-blue-600 text-white" 
                   : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
             >
@@ -131,7 +131,7 @@ const UserSubmissions = () => {
               onClick={() => setAnalyticsView("detailed")}
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 analyticsView === "detailed" 
-                  ? "bg-purple-600 text-white" 
+                  ? "bg-blue-600 text-white" 
                   : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
             >
@@ -142,7 +142,7 @@ const UserSubmissions = () => {
 
         {/* Analytics Dashboard */}
         <div className="bg-[#1E1E1E] rounded-2xl p-6 mb-8 shadow-lg">
-          <h2 className="text-xl font-bold mb-4 text-purple-300">Project Analytics</h2>
+          <h2 className="text-xl font-bold mb-4 text-blue-300">Project Analytics</h2>
           
           {analyticsView === "overview" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -210,7 +210,7 @@ const UserSubmissions = () => {
               key={filter}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                 activeFilter === filter
-                  ? "bg-purple-600 text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
               onClick={() => setActiveFilter(filter)}
@@ -229,7 +229,7 @@ const UserSubmissions = () => {
           <div className="text-center py-12">
             <p className="text-gray-400">You haven't submitted any projects yet.</p>
             <Link to="/submit">
-              <button className="mt-4 bg-purple-600 hover:bg-purple-700 px-5 py-2 rounded-full font-semibold transition">
+              <button className="mt-4 bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-full font-semibold transition">
                 Submit Your First Project
               </button>
             </Link>
@@ -254,7 +254,7 @@ const UserSubmissions = () => {
                 
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-3">
-                    <h2 className="text-xl font-bold text-purple-300">
+                    <h2 className="text-xl font-bold text-blue-300">
                       {project.title}
                     </h2>
                     {project.link && (
@@ -321,7 +321,7 @@ const UserSubmissions = () => {
                     </Link>
                     <Link 
                       to={`/project/${project._id}/edit`}
-                      className="flex-1 bg-purple-700 hover:bg-purple-800 text-center py-2 rounded-r-lg text-sm font-medium transition"
+                      className="flex-1 bg-blue-700 hover:bg-blue-800 text-center py-2 rounded-r-lg text-sm font-medium transition"
                     >
                       Edit Project
                     </Link>

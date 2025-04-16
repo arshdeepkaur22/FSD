@@ -34,18 +34,18 @@ const Register = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold tracking-tight text-purple-400">
+            <div className="text-2xl font-bold tracking-tight text-white">
               Projecthub
             </div>
             <div className="flex items-center space-x-6">
               <nav className="flex space-x-4 text-gray-300 hover:*:text-white">
-                <a href="#" className="hover:text-purple-400 transition">
+                <a href="#" className="hover:text-white transition">
                   Home
                 </a>
-                <a href="#" className="hover:text-purple-400 transition">
+                <a href="#" className="hover:text-white transition">
                   Projects
                 </a>
-                <a href="#" className="hover:text-purple-400 transition">
+                <a href="#" className="hover:text-white transition">
                   Login
                 </a>
               </nav>
@@ -57,7 +57,7 @@ const Register = () => {
       {/* Registration Form Container */}
       <div className="w-full max-w-md px-4 my-20">
         <div className="bg-[#1E1E1E] rounded-2xl shadow-2xl p-8 border border-[#2C2C2C]">
-          <h2 className="text-3xl font-bold mb-6 text-purple-300 text-center">
+          <h2 className="text-3xl font-bold mb-6 text-blue-300 text-center">
             Create Your Account
           </h2>
 
@@ -84,7 +84,7 @@ const Register = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your full name"
                 />
                 <svg
@@ -119,7 +119,7 @@ const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your email"
                 />
                 <svg
@@ -154,7 +154,7 @@ const Register = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter your student ID"
                 />
                 <svg
@@ -189,7 +189,7 @@ const Register = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Create a strong password"
                 />
                 <svg
@@ -221,7 +221,7 @@ const Register = () => {
                 id="role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full bg-[#2C2C2C] text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="student">Student</option>
                 <option value="teacher">Teacher</option>
@@ -231,7 +231,7 @@ const Register = () => {
             {/* Register Button */}
             <button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-full transition transform active:scale-95"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-full transition transform active:scale-95"
             >
               Create Account
             </button>
@@ -243,7 +243,7 @@ const Register = () => {
               Already have an account?{" "}
               <a
                 href="/login"
-                className="text-purple-400 hover:text-purple-300 transition font-semibold"
+                className="text-white hover:text-blue-300 transition font-semibold"
               >
                 Login
               </a>

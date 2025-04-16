@@ -13,9 +13,11 @@ const Project = () => {
   const [iframeLoading, setIframeLoading] = useState(true);
   const [iframeError, setIframeError] = useState(false);
 
-  // Check if user is a teacher
-  const userRole = localStorage.getItem("userRole");
-  const isTeacher = userRole === "teacher";
+  // Get authentication status and user role
+  const token = localStorage.getItem("token");
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAuthenticated = !!token;
+  const isTeacher = userData.role === "teacher";
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -39,29 +41,27 @@ const Project = () => {
 
   const handleLike = async () => {
     try {
-      // Get token from localStorage
-      const token = localStorage.getItem("token");
-  
-      if (!token) {
-        alert("Please login to like projects");
+      if (!isAuthenticated) {
+        // Redirect to login page if not authenticated
+        navigate("/login", { state: { from: `/projects/${id}` } });
         return;
       }
-  
+
       console.log(`Liking project: ${id}`);
-  
+
       const res = await axios.post(
         `http://localhost:5000/api/projects/${id}/like`,
         {}, // Empty body is fine
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
-  
+
       console.log("Like response:", res.data);
-  
+
       // Update local state to reflect new like count
       setProject({
         ...project,
@@ -69,60 +69,63 @@ const Project = () => {
       });
     } catch (error) {
       console.error("Error liking project:", error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
       alert(`Failed to like project: ${errorMessage}`);
     }
   };
 
-// Fixed rating handler for the Project view
-const handleRate = async (rating) => {
-  try {
-    // Only teachers can rate
-    if (!isTeacher) {
-      alert("Only teachers can rate projects");
-      return;
-    }
-
-    // Get token from localStorage
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      alert("Please login to rate projects");
-      return;
-    }
-    
-    console.log(`Rating project ${id} with ${rating} stars`);
-    
-    // Make sure rating is a valid number
-    const numericRating = parseInt(rating, 10);
-    
-    // Send the rating request
-    const res = await axios.post(
-      `http://localhost:5000/api/projects/${id}/rate`,
-      { rating: numericRating }, // Ensure we're sending a number
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+  // Fixed rating handler for the Project view
+  const handleRate = async (rating) => {
+    try {
+      if (!isAuthenticated) {
+        navigate("/login", { state: { from: `/projects/${id}` } });
+        return;
       }
-    );
-    
-    console.log("Rating response:", res.data);
 
-    // Update local state to reflect new rating
-    setProject({
-      ...project,
-      averageRating: res.data.averageRating
-    });
+      // Only teachers can rate
+      if (!isTeacher) {
+        alert("Only teachers can rate projects");
+        return;
+      }
 
-    setUserRating(numericRating);
-  } catch (error) {
-    console.error("Error rating project:", error);
-    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-    alert(`Failed to rate project: ${errorMessage}`);
-  }
-};
+      console.log(`Rating project ${id} with ${rating} stars`);
+
+      // Make sure rating is a valid number
+      const numericRating = parseInt(rating, 10);
+
+      // Send the rating request
+      const res = await axios.post(
+        `http://localhost:5000/api/projects/${id}/rate`,
+        { rating: numericRating }, // Ensure we're sending a number
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Rating response:", res.data);
+
+      // Update local state to reflect new rating
+      setProject({
+        ...project,
+        averageRating: res.data.averageRating,
+      });
+
+      setUserRating(numericRating);
+    } catch (error) {
+      console.error("Error rating project:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message;
+      alert(`Failed to rate project: ${errorMessage}`);
+    }
+  };
 
   // Function to render SDG goals badges
   const renderSdgBadges = (sdgGoals) => {
@@ -145,25 +148,27 @@ const handleRate = async (rating) => {
   // Get grade color based on the letter grade
   const getGradeColor = (grade) => {
     if (!grade) return "bg-gray-800 text-gray-300";
-    
-    if (grade.startsWith('A')) return "bg-green-900/60 text-green-300";
-    if (grade.startsWith('B')) return "bg-blue-900/60 text-blue-300";
-    if (grade.startsWith('C')) return "bg-yellow-900/60 text-yellow-300";
+
+    if (grade.startsWith("A")) return "bg-green-900/60 text-green-300";
+    if (grade.startsWith("B")) return "bg-white/60 text-white";
+    if (grade.startsWith("C")) return "bg-yellow-900/60 text-yellow-300";
     return "bg-red-900/60 text-red-300";
   };
 
   const getStudentName = () => {
     if (!project || !project.student) return "Anonymous";
-    
+
     // If student is fully populated
-    if (typeof project.student === 'object') {
+    if (typeof project.student === "object") {
       // Try different common name fields
-      return project.student.name || 
-             project.student.username || 
-             project.student.fullName || 
-             "Anonymous";
+      return (
+        project.student.name ||
+        project.student.username ||
+        project.student.fullName ||
+        "Anonymous"
+      );
     }
-    
+
     // If student is just an ID and not populated
     return "Anonymous";
   };
@@ -220,7 +225,7 @@ const handleRate = async (rating) => {
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-purple-400 hover:text-purple-300 transition"
+            className="flex items-center text-white hover:text-purple-300 transition"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -258,11 +263,15 @@ const handleRate = async (rating) => {
                 <div className="absolute top-4 right-4 bg-black/50 px-3 py-1 rounded-full text-xs">
                   {project.category}
                 </div>
-                
+
                 {/* Display project grade badge if available */}
                 {project.grade && (
                   <div className="absolute top-4 left-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(project.grade)}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(
+                        project.grade
+                      )}`}
+                    >
                       Grade: {project.grade}
                     </span>
                   </div>
@@ -274,20 +283,25 @@ const handleRate = async (rating) => {
                   {project.title}
                 </h1>
                 <div className="flex items-center text-gray-400 text-sm mb-6">
-                <span>Created by {getStudentName()}</span>
+                  <span>Created by {getStudentName()}</span>
                   <span className="mx-2">•</span>
                   <span>
                     {new Date(project.createdAt).toLocaleDateString()}
                   </span>
-                  
+
                   {/* Show project status */}
                   <span className="mx-2">•</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    project.status === 'Approved' ? 'bg-green-800 text-green-200' :
-                    project.status === 'In Review' ? 'bg-yellow-800 text-yellow-200' :
-                    project.status === 'Rejected' ? 'bg-red-800 text-red-200' :
-                    'bg-gray-800 text-gray-200'
-                  }`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs ${
+                      project.status === "Approved"
+                        ? "bg-green-800 text-green-200"
+                        : project.status === "In Review"
+                        ? "bg-yellow-800 text-yellow-200"
+                        : project.status === "Rejected"
+                        ? "bg-red-800 text-red-200"
+                        : "bg-gray-800 text-gray-200"
+                    }`}
+                  >
                     {project.status}
                   </span>
                 </div>
@@ -333,7 +347,7 @@ const handleRate = async (rating) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Team Members Section (if any) */}
                 {project.teamMembers && project.teamMembers.length > 0 && (
                   <div className="mb-6">
@@ -342,13 +356,22 @@ const handleRate = async (rating) => {
                     </h2>
                     <div className="bg-[#2A2A2A] rounded-lg p-4">
                       {project.teamMembers.map((member, index) => (
-                        <div key={index} className="flex justify-between items-center mb-2 last:mb-0 pb-2 last:pb-0 border-b border-gray-700 last:border-0">
+                        <div
+                          key={index}
+                          className="flex justify-between items-center mb-2 last:mb-0 pb-2 last:pb-0 border-b border-gray-700 last:border-0"
+                        >
                           <div>
                             <span className="font-medium">{member.name}</span>
-                            <span className="text-gray-400 text-sm ml-2">({member.role})</span>
+                            <span className="text-gray-400 text-sm ml-2">
+                              ({member.role})
+                            </span>
                           </div>
                           {member.grade && (
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${getGradeColor(member.grade)}`}>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${getGradeColor(
+                                member.grade
+                              )}`}
+                            >
                               {member.grade}
                             </span>
                           )}
@@ -400,7 +423,7 @@ const handleRate = async (rating) => {
                           href={project.deployedLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-purple-400 hover:text-purple-300 transition"
+                          className="text-white hover:text-purple-300 transition"
                         >
                           Open in new tab instead
                         </a>
@@ -423,7 +446,7 @@ const handleRate = async (rating) => {
                       href={project.deployedLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 transition"
+                      className="text-white hover:text-purple-300 transition"
                     >
                       Open in new tab →
                     </a>
@@ -437,7 +460,7 @@ const handleRate = async (rating) => {
               <h2 className="text-xl font-semibold mb-4 text-purple-200">
                 Teacher Feedback
               </h2>
-              
+
               {project.feedback && project.feedback.length > 0 ? (
                 <div className="space-y-4">
                   {project.feedback.map((item, index) => (
@@ -445,7 +468,9 @@ const handleRate = async (rating) => {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <span className="font-medium text-purple-300">
-                            {item.teacher?.name || item.teacher?.username || "Teacher"}
+                            {item.teacher?.name ||
+                              item.teacher?.username ||
+                              "Teacher"}
                           </span>
                           <span className="text-xs text-gray-400 ml-2">
                             {new Date(item.createdAt).toLocaleDateString()}
@@ -481,15 +506,21 @@ const handleRate = async (rating) => {
                 {/* Project Grade (if available) */}
                 {project.grade && (
                   <div>
-                    <h3 className="text-sm text-gray-400 mb-2">Project Grade</h3>
+                    <h3 className="text-sm text-gray-400 mb-2">
+                      Project Grade
+                    </h3>
                     <div className="flex items-center">
-                      <span className={`px-3 py-1 rounded-lg ${getGradeColor(project.grade)}`}>
+                      <span
+                        className={`px-3 py-1 rounded-lg ${getGradeColor(
+                          project.grade
+                        )}`}
+                      >
                         {project.grade}
                       </span>
                     </div>
                   </div>
                 )}
-              
+
                 {/* Rating */}
                 <div>
                   <h3 className="text-sm text-gray-400 mb-2">Rating</h3>
@@ -506,11 +537,13 @@ const handleRate = async (rating) => {
                               ? "text-gray-400 hover:text-yellow-400"
                               : "text-gray-400"
                           }`}
-                          disabled={!isTeacher}
+                          disabled={!isAuthenticated || !isTeacher}
                           title={
-                            isTeacher
-                              ? "Click to rate"
-                              : "Only teachers can rate projects"
+                            !isAuthenticated
+                              ? "Login to rate"
+                              : !isTeacher
+                              ? "Only teachers can rate projects"
+                              : "Click to rate"
                           }
                         >
                           ★
@@ -531,26 +564,50 @@ const handleRate = async (rating) => {
 
                 {/* Like */}
                 <div>
-                  <button
-                    onClick={handleLike}
-                    className="flex items-center bg-[#2A2A2A] hover:bg-[#3A3A3A] px-4 py-2 rounded-full transition"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-red-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
+                  {isAuthenticated ? (
+                    <button
+                      onClick={handleLike}
+                      className="flex items-center bg-[#2A2A2A] hover:bg-[#3A3A3A] px-4 py-2 rounded-full transition"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
-                    </svg>
-                    Like this project ({project.likes || 0})
-                  </button>
+                      <svg
+                        className="w-5 h-5 mr-2 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      Like this project ({project.likes || 0})
+                    </button>
+                  ) : (
+                    <Link
+                      to="/login"
+                      state={{ from: `/projects/${id}` }}
+                      className="flex items-center bg-[#2A2A2A] hover:bg-[#3A3A3A] px-4 py-2 rounded-full transition"
+                    >
+                      <svg
+                        className="w-5 h-5 mr-2 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      Login to like ({project.likes || 0})
+                    </Link>
+                  )}
                 </div>
 
                 {/* Links */}
@@ -560,7 +617,7 @@ const handleRate = async (rating) => {
                       href={project.githubLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center text-blue-400 hover:text-blue-300 transition"
+                      className="flex items-center text-white hover:text-white transition"
                     >
                       <svg
                         className="w-5 h-5 mr-2"
@@ -608,12 +665,17 @@ const handleRate = async (rating) => {
 
                     <div className="text-gray-400 text-sm">Status:</div>
                     <div className="text-right">
-                      <span className={`px-2 py-0.5 rounded-full text-xs ${
-                        project.status === 'Approved' ? 'bg-green-800 text-green-200' :
-                        project.status === 'In Review' ? 'bg-yellow-800 text-yellow-200' :
-                        project.status === 'Rejected' ? 'bg-red-800 text-red-200' :
-                        'bg-gray-800 text-gray-200'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs ${
+                          project.status === "Approved"
+                            ? "bg-green-800 text-green-200"
+                            : project.status === "In Review"
+                            ? "bg-yellow-800 text-yellow-200"
+                            : project.status === "Rejected"
+                            ? "bg-red-800 text-red-200"
+                            : "bg-gray-800 text-gray-200"
+                        }`}
+                      >
                         {project.status}
                       </span>
                     </div>
@@ -640,7 +702,7 @@ const handleRate = async (rating) => {
             </div>
 
             {/* Student Info Card */}
-            {project.student && typeof project.student === 'object' && (
+            {project.student && typeof project.student === "object" && (
               <div className="bg-[#1E1E1E] rounded-2xl shadow-2xl p-6">
                 <h2 className="text-xl font-semibold mb-4 text-purple-200">
                   Student Information
@@ -664,7 +726,7 @@ const handleRate = async (rating) => {
                 <div className="text-center mt-4">
                   <Link
                     to={`/student/${project.student._id}`}
-                    className="text-purple-400 hover:text-purple-300 transition"
+                    className="text-white hover:text-purple-300 transition"
                   >
                     View All Projects
                   </Link>
