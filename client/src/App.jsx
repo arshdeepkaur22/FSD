@@ -11,13 +11,11 @@ import Home from "./pages/Home";
 import ProjectSubmission from "./pages/ProjectSubmission";
 import Dashboard from "./pages/Teachers/Dashboard";
 import Leaderboard from "./pages/Teachers/Leaderboard";
-import Students from "./pages/Teachers/Students";
 import FeedbackModal from "./pages/Teachers/FeedbackModal";
 import CollaborationDetail from "./pages/CollaborationDetail";
 import CollaborationHub from "./pages/CollaborationHub";
 import Project from "./pages/Project";
 import UserSubmissions from "./pages/UserSubmissions";
-import ProjectCard from "./pages/ProjectCard";
 import Mentorship from "./pages/Mentorship";
 
 // Protected Route component for authenticated routes
