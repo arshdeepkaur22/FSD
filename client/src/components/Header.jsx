@@ -48,7 +48,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-2xl font-bold tracking-tight text-white">
-              Projecthub
+              ProjectNest
             </span>
             {isTeacher && (
               <span className="bg-purple-700 text-white text-xs px-2 py-1 rounded-full">

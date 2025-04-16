@@ -123,14 +123,7 @@ const App = () => {
             </TeacherRoute>
           }
         />
-        <Route
-          path="/students"
-          element={
-            <TeacherRoute>
-              <Students />
-            </TeacherRoute>
-          }
-        />
+        
         <Route
           path="/feedback"
           element={

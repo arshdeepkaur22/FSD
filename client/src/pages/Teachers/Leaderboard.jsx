@@ -72,9 +72,12 @@ const Leaderboard = () => {
       {/* Leaderboard Content */}
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Project Leaderboard</h1>
+          <h1 className="text-4xl font-bold text-white mb-4">
+            Project Leaderboard
+          </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Discover the highest ranked and most popular projects on Projecthub. Sort by likes, ratings, or newest additions.
+            Discover the highest ranked and most popular projects on
+            ProjectNest. Sort by likes, ratings, or newest additions.
           </p>
         </div>
 
@@ -84,7 +87,9 @@ const Leaderboard = () => {
             <button
               onClick={() => handleSort("likes")}
               className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                sortBy === "likes" ? "bg-blue-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+                sortBy === "likes"
+                  ? "bg-blue-600 text-white"
+                  : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
             >
               <Heart size={16} className="mr-2" />
@@ -94,7 +99,9 @@ const Leaderboard = () => {
             <button
               onClick={() => handleSort("averageRating")}
               className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                sortBy === "averageRating" ? "bg-blue-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+                sortBy === "averageRating"
+                  ? "bg-blue-600 text-white"
+                  : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
             >
               <Star size={16} className="mr-2" />
@@ -104,7 +111,9 @@ const Leaderboard = () => {
             <button
               onClick={() => handleSort("createdAt")}
               className={`flex items-center px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                sortBy === "createdAt" ? "bg-blue-600 text-white" : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
+                sortBy === "createdAt"
+                  ? "bg-blue-600 text-white"
+                  : "bg-[#2C2C2C] text-gray-400 hover:bg-[#3C3C3C]"
               }`}
             >
               Newest
@@ -158,15 +167,18 @@ const Leaderboard = () => {
                         <div className="flex items-center">
                           <Heart
                             size={18}
-                            className={project.likedByUser ? "text-red-500" : "text-gray-400"}
+                            className={
+                              project.likedByUser
+                                ? "text-red-500"
+                                : "text-gray-400"
+                            }
                           />
-                          <span className="ml-2 text-gray-300">{project.likes || 0}</span>
+                          <span className="ml-2 text-gray-300">
+                            {project.likes || 0}
+                          </span>
                         </div>
                         <div className="flex items-center">
-                          <Star
-                            size={18}
-                            className="text-yellow-400"
-                          />
+                          <Star size={18} className="text-yellow-400" />
                           <span className="ml-2 text-gray-300">
                             {project.averageRating?.toFixed(1) || "N/A"}
                           </span>
