@@ -732,4 +732,50 @@ router.get("/students/stats", authMiddleware, async (req, res) => {
   }
 });
 
+// Update a project
+router.put("/:id", authMiddleware, upload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    
+    // Check if user owns this project
+    if (project.student.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to edit this project" });
+    }
+    
+    // Update the project with new data
+    const updatedData = {
+      title: req.body.title,
+      description: req.body.description,
+      techStack: req.body.techStack,
+      category: req.body.category,
+      department: req.body.department,
+      githubLink: req.body.githubLink,
+      deployedLink: req.body.deployedLink,
+      sdgGoals: req.body.sdgGoals,
+      sdgJustification: req.body.sdgJustification
+    };
+    
+    // Only update image if a new one was uploaded
+    if (req.file) {
+      updatedData.image = `/uploads/${req.file.filename}`;
+    }
+    
+    const updatedProject = await Project.findByIdAndUpdate(
+      id, 
+      updatedData,
+      { new: true, runValidators: true }
+    );
+    
+    res.json(updatedProject);
+  } catch (error) {
+    console.error("Error updating project:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

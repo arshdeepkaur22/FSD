@@ -12,6 +12,7 @@ import {
   UserPlus,
   Trash2,
   Edit,
+  Building,
 } from "lucide-react";
 import axios from "axios";
 import Header from "../../components/Header";
@@ -36,6 +37,9 @@ const sdgOptions = [
   "Peace, Justice, and Strong Institutions",
   "Partnerships for the Goals",
 ];
+
+// Department options
+const departmentOptions = ["Computer Engineering", "Computer Science and Engineering", "Mechanical Engineering", "Electronics and Computer Science"];
 
 // FeedbackModal Component
 const FeedbackModal = ({
@@ -187,7 +191,9 @@ const Dashboard = () => {
   const [gradingModal, setGradingModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("All Departments");
   const [projects, setProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -197,7 +203,6 @@ const Dashboard = () => {
   const [studentsError, setStudentsError] = useState(null);
 
   // Student management state
-  const [departmentFilter, setDepartmentFilter] = useState("All Departments");
   const [yearFilter, setYearFilter] = useState("All Years");
 
   // Fetch projects on component mount
@@ -219,13 +224,17 @@ const Dashboard = () => {
 
   // Apply project filters
   useEffect(() => {
-    fetchProjects();
-  }, [searchTerm, statusFilter]);
+    if (allProjects.length > 0) {
+      applyFilters();
+    } else {
+      fetchProjects();
+    }
+  }, [searchTerm, statusFilter, departmentFilter]);
 
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      // Build query params
+      // Build query params for backend filtering
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter) params.append("status", statusFilter);
@@ -240,7 +249,12 @@ const Dashboard = () => {
         }
       );
 
-      setProjects(response.data.projects);
+      // Store all projects for client-side filtering
+      setAllProjects(response.data.projects);
+      
+      // Apply filters including department
+      applyFilters(response.data.projects);
+      
       setError(null);
     } catch (err) {
       console.error("Error fetching projects:", err);
@@ -248,6 +262,20 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Apply filters client-side (including department filter)
+  const applyFilters = (projectsToFilter = allProjects) => {
+    let filteredProjects = [...projectsToFilter];
+    
+    // Apply department filter
+    if (departmentFilter && departmentFilter !== "All Departments") {
+      filteredProjects = filteredProjects.filter(
+        project => project.department === departmentFilter
+      );
+    }
+    
+    setProjects(filteredProjects);
   };
 
   const fetchStudents = async () => {
@@ -283,6 +311,8 @@ const Dashboard = () => {
     setStatusFilter("");
     setDepartmentFilter("All Departments");
     setYearFilter("All Years");
+    // Refetch projects to reset
+    fetchProjects();
   };
 
   // Project handlers
@@ -340,6 +370,19 @@ const Dashboard = () => {
       });
 
       setProjects(updatedProjects);
+      
+      // Also update allProjects
+      const updatedAllProjects = allProjects.map((p) => {
+        if (p._id === projectId) {
+          return {
+            ...p,
+            likes: response.data.likes,
+          };
+        }
+        return p;
+      });
+      
+      setAllProjects(updatedAllProjects);
     } catch (err) {
       console.error("Error liking project:", err);
       const errorMessage =
@@ -413,6 +456,43 @@ const Dashboard = () => {
       });
 
       setProjects(updatedProjects);
+      
+      // Also update allProjects
+      const updatedAllProjects = allProjects.map((p) => {
+        if (p._id === projectId) {
+          // Create a copy of the current ratings
+          let updatedRatings = [...(p.ratings || [])];
+
+          // Find if user already rated this project
+          const existingRatingIndex = updatedRatings.findIndex(
+            (r) => r.user === userId
+          );
+
+          if (existingRatingIndex >= 0) {
+            // Update existing rating
+            updatedRatings[existingRatingIndex] = {
+              ...updatedRatings[existingRatingIndex],
+              rating: numericRating,
+            };
+          } else {
+            // Add new rating
+            updatedRatings.push({
+              user: userId,
+              rating: numericRating,
+            });
+          }
+
+          return {
+            ...p,
+            averageRating: response.data.averageRating,
+            status: response.data.status || p.status,
+            ratings: updatedRatings,
+          };
+        }
+        return p;
+      });
+      
+      setAllProjects(updatedAllProjects);
     } catch (err) {
       console.error("Error rating project:", err);
       alert(
@@ -459,6 +539,20 @@ const Dashboard = () => {
       });
 
       setProjects(updatedProjects);
+      
+      // Also update allProjects
+      const updatedAllProjects = allProjects.map((p) => {
+        if (p._id === selectedProject._id) {
+          return {
+            ...p,
+            grade: response.data.grade,
+            status: response.data.status,
+          };
+        }
+        return p;
+      });
+      
+      setAllProjects(updatedAllProjects);
 
       // Close the modal
       setGradingModal(false);
@@ -541,6 +635,13 @@ const Dashboard = () => {
       );
 
       setProjects(updatedProjects);
+      
+      // Also update allProjects
+      const updatedAllProjects = allProjects.map((p) =>
+        p._id === projectId ? { ...p, status } : p
+      );
+      
+      setAllProjects(updatedAllProjects);
     } catch (err) {
       console.error("Error changing project status:", err);
       alert("Failed to update project status. Please try again.");
@@ -608,6 +709,14 @@ const Dashboard = () => {
               </span>
             </div>
           </div>
+
+          {/* Department */}
+          {project.department && (
+            <div className="flex items-center mb-2">
+              <Building size={14} className="text-blue-400 mr-1" />
+              <span className="text-xs text-blue-300">{project.department}</span>
+            </div>
+          )}
 
           {/* Short description */}
           <p className="text-gray-400 text-sm mb-3 line-clamp-2">
@@ -701,7 +810,21 @@ const Dashboard = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {/* Department Filter */}
+              <select
+                className="bg-[#2C2C2C] text-white border-0 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+              >
+                {departmentOptions.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Status Filter */}
               <select
                 className="bg-[#2C2C2C] text-white border-0 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
                 value={statusFilter}
@@ -723,6 +846,23 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+        
+        {/* Indicator for active filters */}
+        {(departmentFilter !== "All Departments" || statusFilter) && (
+          <div className="mb-4 flex items-center">
+            <span className="text-gray-400 mr-2">Active filters:</span>
+            {departmentFilter !== "All Departments" && (
+              <span className="bg-blue-900/30 text-blue-300 text-xs px-2 py-1 rounded-full mr-2">
+                Department: {departmentFilter}
+              </span>
+            )}
+            {statusFilter && (
+              <span className="bg-purple-900/30 text-purple-300 text-xs px-2 py-1 rounded-full mr-2">
+                Status: {statusFilter}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Loading state */}
         {loading ? (

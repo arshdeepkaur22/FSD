@@ -144,6 +144,12 @@ const projectSchema = new mongoose.Schema({
       required: true
     }
   }],
+
+  department: {
+    type: String,
+    enum: ["Computer Engineering", "Computer Science and Engineering", "Mechanical Engineering", "Electronics and Computer Science"],
+    required: true
+  },
   averageRating: {
     type: Number,
     default: 0

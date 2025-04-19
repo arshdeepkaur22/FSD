@@ -18,6 +18,7 @@ const Project = () => {
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
   const isAuthenticated = !!token;
   const isTeacher = userData.role === "teacher";
+  const isOwner = project?.student?._id === userData._id || project?.student === userData._id;
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -455,13 +456,13 @@ const Project = () => {
               </div>
             )}
 
-            {/* Teacher Feedback Section - Updated to handle array of feedback */}
-            <div className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl p-6 mb-8">
-              <h2 className="text-xl font-semibold mb-4 text-purple-200">
-                Teacher Feedback
-              </h2>
+            {/* Teacher Feedback Section - Only visible to the project owner */}
+            {isOwner && project.feedback && project.feedback.length > 0 && (
+              <div className="bg-[#1E1E1E] rounded-2xl overflow-hidden shadow-2xl p-6 mb-8">
+                <h2 className="text-xl font-semibold mb-4 text-purple-200">
+                  Teacher Feedback
+                </h2>
 
-              {project.feedback && project.feedback.length > 0 ? (
                 <div className="space-y-4">
                   {project.feedback.map((item, index) => (
                     <div key={index} className="bg-[#2A2A2A] rounded-xl p-4">
@@ -486,12 +487,8 @@ const Project = () => {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-gray-400 bg-[#2A2A2A] rounded-xl p-4">
-                  No feedback has been provided yet.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -610,6 +607,18 @@ const Project = () => {
                   )}
                 </div>
 
+                {/* Feedback Count - Only visible to the project owner */}
+                {isOwner && project.feedback && project.feedback.length > 0 && (
+                  <div>
+                    <h3 className="text-sm text-gray-400 mb-2">Feedback</h3>
+                    <div className="flex items-center">
+                      <span className="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-lg">
+                        {project.feedback.length} comments
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Links */}
                 <div className="space-y-2">
                   {project.githubLink && (
@@ -662,6 +671,13 @@ const Project = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="text-gray-400 text-sm">Category:</div>
                     <div className="text-right">{project.category}</div>
+
+                    {project.department && (
+                      <>
+                        <div className="text-gray-400 text-sm">Department:</div>
+                        <div className="text-right">{project.department}</div>
+                      </>
+                    )}
 
                     <div className="text-gray-400 text-sm">Status:</div>
                     <div className="text-right">
@@ -743,6 +759,16 @@ const Project = () => {
                 <p>Similar projects feature coming soon</p>
               </div>
             </div>
+
+            {/* Edit Project Button (only for owner) */}
+            {isOwner && (
+              <Link 
+                to={`/project/${project._id}/edit`}
+                className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium transition"
+              >
+                Edit Your Project
+              </Link>
+            )}
           </div>
         </div>
       </div>
