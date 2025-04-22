@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const collabRoutes = require("./routes/collabRoutes");
 const gitRoutes = require("./routes/gitRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/collaborations", collabRoutes);
 app.use("/api/github", gitRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Simple test route
 app.get("/api/test", (req, res) => {
