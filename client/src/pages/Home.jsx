@@ -13,7 +13,8 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProjects, setTotalProjects] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const projectsPerPage = 21;
+  // Changed from 21 to 6 projects per page as mentioned
+  const projectsPerPage = 6;
 
   // Search functionality
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,42 +38,59 @@ const Home = () => {
     setCurrentPage(1);
   }, [debouncedSearchQuery]);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        // Build query parameters including pagination and search
-        let query = `?page=${currentPage}&limit=${projectsPerPage}`;
-        
-        // Add category filter if not "All"
-        if (activeCategory !== "All") {
-          query += `&category=${activeCategory}`;
-        }
-        
-        // Add search query if it exists
-        if (debouncedSearchQuery.trim()) {
-          query += `&search=${encodeURIComponent(debouncedSearchQuery.trim())}`;
-          setIsSearching(true);
-        } else {
-          setIsSearching(false);
-        }
-
-        const res = await axios.get(`http://localhost:5000/api/projects${query}`);
-        
-        // Update state with projects and pagination data
-        setProjects(res.data.projects || []);
-        setTotalProjects(res.data.totalCount || 0);
-        setTotalPages(Math.ceil((res.data.totalCount || 0) / projectsPerPage));
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching projects", error);
-        setError("Failed to load projects. Please try again later.");
-      } finally {
-        setLoading(false);
+// Update the fetchProjects function to correctly access the API response
+useEffect(() => {
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      // Build query parameters including pagination and search
+      let query = `?page=${currentPage}&limit=${projectsPerPage}`;
+      
+      // Add category filter if not "All"
+      if (activeCategory !== "All") {
+        query += `&category=${activeCategory}`;
       }
-    };
-    fetchProjects();
-  }, [activeCategory, currentPage, debouncedSearchQuery]);
+      
+      // Add search query if it exists
+      if (debouncedSearchQuery.trim()) {
+        query += `&search=${encodeURIComponent(debouncedSearchQuery.trim())}`;
+        setIsSearching(true);
+      } else {
+        setIsSearching(false);
+      }
+
+      const res = await axios.get(`http://localhost:5000/api/projects${query}`);
+      
+      // Update state with projects
+      setProjects(res.data.projects || []);
+      
+      // Extract total count from API response correctly
+      // FIXED: Use projects length if totalCount is not available
+      const projectCount = res.data.projects ? res.data.projects.length : 0;
+      const totalCount = res.data.totalCount || projectCount;
+      setTotalProjects(totalCount);
+      
+      // Calculate total pages correctly from the API response
+      // FIXED: Use totalPages from API if available, otherwise calculate from projects count
+      const calculatedTotalPages = res.data.totalPages || Math.max(1, Math.ceil(totalCount / projectsPerPage));
+      setTotalPages(calculatedTotalPages);
+      
+      // Debug logging
+      console.log("API Response:", res.data);
+      console.log("Projects array length:", projectCount);
+      console.log("Total projects:", totalCount);
+      console.log("Total pages:", calculatedTotalPages);
+      
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching projects", error);
+      setError("Failed to load projects. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchProjects();
+}, [activeCategory, currentPage, debouncedSearchQuery, projectsPerPage]);
 
   // Reset to first page when changing category
   useEffect(() => {
@@ -231,9 +249,18 @@ const Home = () => {
     });
   };
 
-  // Generate pagination controls
+  // Generate pagination controls - Fixed to always show if there's more than one page
   const renderPagination = () => {
-    if (totalPages <= 1) return null;
+    // Debug logging for pagination
+    console.log("Pagination values - currentPage:", currentPage, "totalPages:", totalPages, "totalProjects:", totalProjects);
+    
+    // Only show pagination if:
+    // 1. There are multiple pages, OR
+    // 2. There are exactly projectsPerPage items (suggesting there might be more)
+    if (totalPages <= 1 && totalProjects < projectsPerPage) {
+      console.log("Not rendering pagination - not enough content to paginate");
+      return null;
+    }
 
     // Calculate which page numbers to show
     let pageNumbers = [];
@@ -309,7 +336,7 @@ const Home = () => {
           ))}
 
           {/* Last page and ellipsis */}
-          {includeLast && (
+          {includeLast && totalPages > 1 && (
             <>
               {currentPage < totalPages - 2 && (
                 <span className="hidden md:flex items-center px-3 py-2 text-sm border border-r-0 border-[#2C2C2C] text-gray-500 bg-[#1E1E1E]">
@@ -658,8 +685,12 @@ const Home = () => {
                   ))}
                 </div>
 
-                {/* Pagination Controls */}
-                {renderPagination()}
+                {/* Debug info for pagination */}
+                
+
+                {/* Modified condition for showing pagination */}
+                {/* Always show pagination if we have at least projectsPerPage items */}
+                {(projects.length > 0 && (currentPage > 1 || totalPages > 1)) && renderPagination()}
               </>
             )}
           </>
