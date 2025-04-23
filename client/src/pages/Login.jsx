@@ -23,6 +23,8 @@ const Login = () => {
       const userData = {
         _id: res.data.userId,
         role: res.data.role,
+        name: res.data.name,
+        email: res.data.email,
         // You can add more fields as needed
       };
 

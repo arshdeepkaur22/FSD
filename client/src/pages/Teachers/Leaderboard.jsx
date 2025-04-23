@@ -127,10 +127,16 @@ const Leaderboard = () => {
     return <Star size={24} className="text-gray-500" />;
   };
 
+  // Check if a project belongs to the current user
+  const isUserProject = (project) => {
+    if (!userData) return false;
+    return project.student?._id === userData._id || project.student === userData._id;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
       {/* Navbar */}
-      <Header></Header>
+      <Header />
 
       {/* Leaderboard Content */}
       <div className="max-w-5xl mx-auto px-4 py-12">
@@ -182,9 +188,7 @@ const Leaderboard = () => {
             </div>
           </div>
         ) : userData && (
-          <div >
-            
-          </div>
+          <div></div>
         )}
 
         {/* Sorting Options */}
@@ -238,12 +242,15 @@ const Leaderboard = () => {
               <Link
                 to={`/project/${project._id}`}
                 key={project._id}
-                className={`block bg-[#1E1E1E] rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:shadow-purple-900/30 hover:translate-x-1 ${
-                  userData && (project.student?._id === userData._id || project.student === userData._id)
-                    ? "border-1 border-purple-100"
-                    : ""
+                className={`block rounded-xl overflow-hidden shadow-lg transform transition-all duration-300 hover:shadow-purple-900/30 hover:translate-x-1 ${
+                  isUserProject(project)
+                    ? "bg-gradient-to-r from-[#1E1E1E] to-[#1E1E1E] border-1 border-white relative shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+                    : "bg-[#1E1E1E]"
                 }`}
               >
+                {/* Highlight ribbon for user project */}
+                
+                
                 <div className="flex flex-col md:flex-row">
                   {/* Rank and Image */}
                   <div className="relative md:w-1/4">
@@ -263,20 +270,23 @@ const Leaderboard = () => {
                       {project.category}
                     </div>
                     
-                    {/* User's project indicator */}
-                    {userData && (project.student?._id === userData._id || project.student === userData._id) && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-purple-700/80 py-1 text-xs text-center font-bold">
-                        YOUR PROJECT
-                      </div>
+                    {/* User's project indicator - now as a horizontal banner */}
+                    {isUserProject(project) && (
+                      <></>
                     )}
                   </div>
 
                   {/* Project Details */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div className={`p-5 flex-1 flex flex-col justify-between ${isUserProject(project) ? "bg-[#1E1E1E]/90" : ""}`}>
                     <div>
-                      <h2 className="text-xl font-bold text-white">
-                        {project.title}
-                      </h2>
+                      <div className="flex justify-between items-start">
+                        <h2 className="text-xl font-bold text-white">
+                          {project.title}
+                        </h2>
+                        {isUserProject(project) && (
+                          <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">Your Project</span>
+                        )}
+                      </div>
                       <p className="text-gray-400 text-sm mt-2">
                         {project.description}
                       </p>
@@ -306,7 +316,7 @@ const Leaderboard = () => {
                         </div>
                       </div>
                       <div className="text-xs text-gray-500">
-                        By {project.student?.username || "Anonymous"}
+                        By {project.student?.name || project.student?.username || "Anonymous"}
                       </div>
                     </div>
                   </div>
