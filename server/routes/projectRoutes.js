@@ -37,6 +37,7 @@ router.post("/upload", authMiddleware, upload.single("image"), async (req, res) 
     const { 
       title, 
       description, 
+      department,
       techStack, 
       category, 
       githubLink, 
@@ -106,6 +107,7 @@ router.post("/upload", authMiddleware, upload.single("image"), async (req, res) 
       image: imagePath, 
       student: req.user.id,
       category,
+      department,
       githubLink,
       deployedLink,
       sdgGoals: sdgGoalsArray,

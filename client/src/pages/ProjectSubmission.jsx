@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Header from "../components/Header";
+import { useNavigate } from "react-router-dom";
+
 
 const ProjectSubmission = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +17,8 @@ const ProjectSubmission = () => {
     sdgJustification: "",
     image: null,
   });
+  const navigate = useNavigate();
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -133,7 +137,8 @@ const ProjectSubmission = () => {
 
       // Show success message
       setSuccess("Project submitted successfully!");
-      
+      navigate('/dashboard');
+
       // Clear file input
       document.getElementById('image').value = '';
     } catch (error) {

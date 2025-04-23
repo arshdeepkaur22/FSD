@@ -182,18 +182,8 @@ const Leaderboard = () => {
             </div>
           </div>
         ) : userData && (
-          <div className="bg-[#1E1E1E]/80 backdrop-blur-sm border border-gray-700/30 rounded-xl p-6 mb-8 shadow-lg">
-            <div className="text-center">
-              <p className="text-gray-400 mb-4">
-                You don't have any projects on the leaderboard yet.
-              </p>
-              <Link 
-                to="/submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-full text-sm font-medium transition inline-block"
-              >
-                Submit a Project
-              </Link>
-            </div>
+          <div >
+            
           </div>
         )}
 
