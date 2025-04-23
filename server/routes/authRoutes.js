@@ -73,12 +73,12 @@ router.post("/login", async (req, res) => {
 
     // Find user
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "Invalid 2credentials" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
-      return res.status(400).json({ message: "Invalid cccredentials" });
+      return res.status(400).json({ message: "Invalid credentials" });
 
     // Generate token
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
@@ -97,33 +97,38 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Add this to your authRoutes.js temporarily
-router.get("/create-test-user", async (req, res) => {
+// Create test admin user
+router.get("/create-admin", async (req, res) => {
   try {
-    // Check if test user already exists
-    const existingUser = await User.findOne({ email: "test@example.com" });
-    if (existingUser) {
+    // Check if admin user already exists
+    const existingAdmin = await User.findOne({ email: "admin@example.com" });
+    if (existingAdmin) {
       return res.json({
-        message: "Test user already exists",
-        userId: existingUser._id,
+        message: "Admin user already exists",
+        email: "admin@example.com",
+        password: "admin123"
       });
     }
 
-    // Create a test user with a known password
-    const hashedPassword = await bcrypt.hash("password123", 10);
-    const testUser = new User({
+    // Create admin user
+    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const adminUser = new User({
       username: 12345,
-      name: "Test User",
-      email: "test@example.com",
+      name: "Admin User",
+      email: "admin@example.com",
       password: hashedPassword,
-      role: "student",
+      role: "admin"
     });
 
-    await testUser.save();
+    await adminUser.save();
 
-    res.json({ message: "Test user created", userId: testUser._id });
+    res.json({ 
+      message: "Admin user created successfully", 
+      email: "admin@example.com",
+      password: "admin123"
+    });
   } catch (error) {
-    console.error("Error creating test user:", error);
+    console.error("Error creating admin user:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

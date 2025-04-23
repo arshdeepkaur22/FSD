@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const collabRoutes = require("./routes/collabRoutes");
 const gitRoutes = require("./routes/gitRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const managementRoutes = require("./routes/managementRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/collaborations", collabRoutes);
 app.use("/api/github", gitRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/management", managementRoutes);
 
 // Simple test route
 app.get("/api/test", (req, res) => {
@@ -49,7 +51,7 @@ mongoose
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api`);

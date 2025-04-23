@@ -17,6 +17,9 @@ import CollaborationHub from "./pages/CollaborationHub";
 import Project from "./pages/Project";
 import UserSubmissions from "./pages/UserSubmissions";
 import Mentorship from "./pages/Mentorship";
+import ManagementDashboard from "./pages/Management/Dashboard";
+import Reports from "./pages/Management/Reports";
+import Partnerships from "./pages/Management/Partnerships";
 
 // Protected Route component for authenticated routes
 const ProtectedRoute = ({ children }) => {
@@ -65,6 +68,29 @@ const StudentRoute = ({ children }) => {
   }
 
   return children;
+};
+
+// Admin Route component for admin-only routes
+const AdminRoute = ({ children }) => {
+  // Temporarily bypass authentication for frontend viewing
+  return children;
+
+  // Original authentication code (commented out)
+  /*
+  const isAuthenticated = localStorage.getItem("token") !== null;
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = userData.role === "admin";
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+  */
 };
 
 const App = () => {
@@ -130,6 +156,32 @@ const App = () => {
             <TeacherRoute>
               <FeedbackModal />
             </TeacherRoute>
+          }
+        />
+
+        {/* Management Routes */}
+        <Route
+          path="/management"
+          element={
+            <AdminRoute>
+              <ManagementDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/management/reports"
+          element={
+            <AdminRoute>
+              <Reports />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/management/partnerships"
+          element={
+            <AdminRoute>
+              <Partnerships />
+            </AdminRoute>
           }
         />
 
