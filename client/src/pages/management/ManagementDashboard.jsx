@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const ManagementDashboard = () => {
   // State variables
@@ -441,20 +441,52 @@ const ManagementDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F0F0F] to-[#1A1A2E] text-white font-inter">
       {/* Navbar */}
-      <nav className="bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
+      <nav className="sticky top-0 z-50 bg-[#1E1E1E]/80 backdrop-blur-md shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="text-2xl font-bold tracking-tight text-white">
-              ProjectNest
-            </div>
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="text-2xl font-bold tracking-tight text-white">
+                ProjectNest
+              </span>
+              <span className="bg-amber-600 text-white text-xs px-2 py-1 rounded-full">
+                Admin
+              </span>
+            </Link>
+
             <div className="flex items-center space-x-6">
+              {/* Navigation Links */}
               <nav className="flex space-x-4 text-gray-300">
-                <a href="/" className="hover:text-white transition">
+                <Link to="/" className="hover:text-white transition">
                   Home
-                </a>
-                <a href="/login" className="hover:text-white transition">
-                  Login
-                </a>
+                </Link>
+                <Link to="/leaderboard" className="hover:text-white transition">
+                  Leaderboard
+                </Link>
+                <Link to="/collaborationHub" className="hover:text-white transition">
+                  Collaborations
+                </Link>
+                <Link to="/mentorship" className="hover:text-white transition">
+                  Mentorships
+                </Link>
+                <Link to="/management/reports" className="hover:text-white transition">
+                  Reports
+                </Link>
+                <Link to="/management/partnerships" className="hover:text-white transition">
+                  Partnerships
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    localStorage.removeItem('userRole');
+                    localStorage.removeItem('user');
+                    navigate('/login');
+                  }}
+                  className="hover:text-white transition"
+                >
+                  Logout
+                </button>
               </nav>
             </div>
           </div>
@@ -463,7 +495,7 @@ const ManagementDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-300">Institutional Management Dashboard</h1>
+          <h1 className="text-3xl font-bold text-blue-300">Admin Dashboard</h1>
         </div>
         
         {/* Tabs */}
