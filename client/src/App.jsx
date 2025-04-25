@@ -26,8 +26,6 @@ import AdminLeaderboard from "./pages/admin/LeaderBoard";
 import Notifications from "./pages/admin/Notifications";
 import Reports from "./pages/admin/Reports";
 import SdgTracking from "./pages/admin/SDGTracking";
-import ManagementDashboard from "./pages/management/ManagementDashboard";
-
 // Protected Route component for authenticated routes
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("token") !== null;
@@ -355,15 +353,15 @@ const App = () => {
           }
         /> */}
 
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<UserManagement />} />
-        <Route path="/admin/projects" element={<ProjectModeration />} />
-        <Route path="/admin/content" element={<ContentOrganization />} />
-        <Route path="/admin/leaderboard" element={<AdminLeaderboard />} />
-        <Route path="/admin/notifications" element={<Notifications />} />
-        <Route path="/admin/reports" element={<Reports />} />
-        <Route path="/admin/sdg-tracking" element={<SdgTracking />} />
-        <Route path="/management" element={<ManagementDashboard />} />
+<Route path="/admin" element={<AdminDashboard />} />
+<Route path="/admin/users" element={<UserManagement />} />
+<Route path="/admin/projects" element={<ProjectModeration />} />
+<Route path="/admin/content" element={<ContentOrganization />} />
+<Route path="/admin/leaderboard" element={<AdminLeaderboard />} />
+<Route path="/admin/notifications" element={<Notifications />} />
+<Route path="/admin/reports" element={<Reports />} />
+<Route path="/admin/sdg-tracking" element={<SdgTracking />} />
+
 
         {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
