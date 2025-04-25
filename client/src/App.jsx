@@ -18,14 +18,7 @@ import Project from "./pages/Project";
 import UserSubmissions from "./pages/UserSubmissions";
 import Mentorship from "./pages/Mentorship";
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UserManagement from "./pages/admin/UserManagement";
-import ProjectModeration from "./pages/admin/ProjectModeration";
-import ContentOrganization from "./pages/admin/ContentOrganisation";
-import AdminLeaderboard from "./pages/admin/LeaderBoard";
-import Notifications from "./pages/admin/Notifications";
-import Reports from "./pages/admin/Reports";
-import SdgTracking from "./pages/admin/SDGTracking";
+import AdminDashboard from "./pages/admind/admindashboard";
 // Protected Route component for authenticated routes
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = localStorage.getItem("token") !== null;
@@ -353,15 +346,7 @@ const App = () => {
           }
         /> */}
 
-<Route path="/admin" element={<AdminDashboard />} />
-<Route path="/admin/users" element={<UserManagement />} />
-<Route path="/admin/projects" element={<ProjectModeration />} />
-<Route path="/admin/content" element={<ContentOrganization />} />
-<Route path="/admin/leaderboard" element={<AdminLeaderboard />} />
-<Route path="/admin/notifications" element={<Notifications />} />
-<Route path="/admin/reports" element={<Reports />} />
-<Route path="/admin/sdg-tracking" element={<SdgTracking />} />
-
+      <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
