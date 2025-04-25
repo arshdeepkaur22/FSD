@@ -10,6 +10,8 @@ const collabRoutes = require("./routes/collabRoutes");
 const gitRoutes = require("./routes/gitRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const collabAnalyticsRoutes = require("./routes/collaborationAnalyticsRoutes");
+const projectAnalyticsRoutes = require("./routes/projectAnalyticsRoutes");
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.use("/api/collaborations", collabRoutes);
 app.use("/api/github", gitRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/collaborationAnalytics", collabAnalyticsRoutes);
+app.use("/api/projectAnalytics", projectAnalyticsRoutes);
 
 // Simple test route
 app.get("/api/test", (req, res) => {
