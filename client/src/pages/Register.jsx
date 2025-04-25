@@ -13,18 +13,36 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log("Form submitted with:", { username, name, email, role });
+
     try {
       const res = await axios.post("http://localhost:5000/api/auth/register", {
-        username: Number(username),
+        username,
         name,
         email,
         password,
         role,
       });
+
+      console.log("Registration successful:", res.data);
       localStorage.setItem("token", res.data.token);
       navigate("/");
     } catch (err) {
-      setError("Error registering user");
+      console.error("Registration error details:", err);
+
+      if (err.response) {
+        // The server responded with an error status code
+        console.error("Server error response:", err.response.data);
+        setError(err.response.data.message || "Error registering user");
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error("No response received:", err.request);
+        setError("No response from server. Please check your connection.");
+      } else {
+        // Something happened in setting up the request
+        console.error("Request setup error:", err.message);
+        setError("Error setting up request: " + err.message);
+      }
     }
   };
 
@@ -45,7 +63,7 @@ const Register = () => {
                 <a href="#" className="hover:text-white transition">
                   Projects
                 </a>
-                <a href="#" className="hover:text-white transition">
+                <a href="/login" className="hover:text-white transition">
                   Login
                 </a>
               </nav>
