@@ -64,7 +64,6 @@ const Header = () => {
 
           <div className="flex items-center space-x-6">
             {/* Search Bar */}
-           
 
             {/* Navigation Links - Conditional based on user role */}
             <nav className="flex space-x-4 text-gray-300">
@@ -82,12 +81,16 @@ const Header = () => {
                   >
                     Leaderboard
                   </Link>
-                  <Link
-                    to="/collaborationHub"
-                    className="hover:text-white transition"
-                  >
-                    Collaborations
-                  </Link>
+
+                  {isStudent && (
+                    <Link
+                      to="/collaborationHub"
+                      className="hover:text-white transition"
+                    >
+                      Collaborations
+                    </Link>
+                  )}
+
                   <Link
                     to="/mentorship"
                     className="hover:text-white transition"
