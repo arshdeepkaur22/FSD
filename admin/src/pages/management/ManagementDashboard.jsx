@@ -457,7 +457,7 @@ const ManagementDashboard = () => {
             <div className="flex items-center space-x-6">
               {/* Navigation Links */}
               <nav className="flex space-x-4 text-gray-300">
-                <Link to="/" className="hover:text-white transition">
+            { /*  <Link to="/" className="hover:text-white transition">
                   Home
                 </Link>
                 <Link to="/leaderboard" className="hover:text-white transition">
@@ -474,7 +474,7 @@ const ManagementDashboard = () => {
                 </Link>
                 <Link to="/management/partnerships" className="hover:text-white transition">
                   Partnerships
-                </Link>
+                </Link> */}
                 <button
                   onClick={() => {
                     localStorage.removeItem('token');

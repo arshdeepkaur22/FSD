@@ -214,6 +214,8 @@ const Mentorship = () => {
       setShowRequestForm(false);
 
       // If we're on the pending tab, refresh the data
+
+
       if (activeTab === "pending") {
         fetchPendingRequests();
       }
@@ -403,7 +405,7 @@ const Mentorship = () => {
                 disabled={isTeacher}
                 className={`w-full py-2 text-white font-medium rounded-lg transition ${
                   isTeacher
-                    ? "bg-gray-600 cursor-not-allowed"
+                    ? "bg-gray-600/0 cursor-not-allowed"
                     : "bg-indigo-600 hover:bg-indigo-700"
                 }`}
               >
@@ -727,7 +729,7 @@ const Mentorship = () => {
               }`}
               onClick={() => setActiveTab("available")}
             >
-              Request Mentorship
+              {isTeacher ? "All Mentorship Applications" : "Request Mentorship"}
             </button>
             <button
               className={`px-4 py-2 font-medium ${

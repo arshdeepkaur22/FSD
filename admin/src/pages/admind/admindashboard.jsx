@@ -162,7 +162,7 @@ const AdminDashboard = () => {
           {
             _id: "2",
             username: "teacher1",
-            name: "Professor Smith",
+            name: "Professor Rahul",
             email: "smith@example.com",
             role: "teacher",
             isActive: true,
@@ -170,24 +170,24 @@ const AdminDashboard = () => {
           {
             _id: "3",
             username: "manager1",
-            name: "Jane Doe",
-            email: "jane@example.com",
+            name: "manager",
+            email: "manager@example.com",
             role: "management",
             isActive: true,
           },
           {
             _id: "4",
             username: "12345",
-            name: "Student One",
-            email: "student1@example.com",
+            name: "Anastasia ",
+            email: "10194@example.com",
             role: "student",
             isActive: true,
           },
           {
             _id: "5",
             username: "12346",
-            name: "Student Two",
-            email: "student2@example.com",
+            name: "Achille ",
+            email: "Achille@example.com",
             role: "student",
             isActive: false,
           },
@@ -601,7 +601,7 @@ const AdminDashboard = () => {
             <div className="flex items-center space-x-6">
               {/* Navigation Links */}
               <nav className="flex space-x-4 text-gray-300">
-                <Link to="/" className="hover:text-white transition">
+                {/* <Link to="/" className="hover:text-white transition">
                   Home
                 </Link>
                 <Link to="/leaderboard" className="hover:text-white transition">
@@ -627,7 +627,7 @@ const AdminDashboard = () => {
                   className="hover:text-white transition"
                 >
                   Partnerships
-                </Link>
+                </Link> */}
                 <button
                   onClick={() => {
                     localStorage.removeItem("token");

@@ -909,7 +909,7 @@ const CollaborationDetail = () => {
                       </div>
                     )}
 
-                  {/* Mentorship Requests Section (Only for owner) */}
+                  {/* Mentorship Requests Section (Only for owner) 
                   {isOwner &&
                     collaboration.mentorshipRequests &&
                     collaboration.mentorshipRequests.length > 0 && (
@@ -1005,6 +1005,8 @@ const CollaborationDetail = () => {
                         </div>
                       </div>
                     )}
+*/}
+
                 </div>
               </div>
             </div>
